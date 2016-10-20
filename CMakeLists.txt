@@ -16,17 +16,17 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11")
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules)
 
-find_package(SQLite3 REQUIRED)
+FIND_PACKAGE(PkgConfig REQUIRED)
+PKG_CHECK_MODULES(SQLITE3 REQUIRED sqlite3)
 
 check_include_file_cxx(iostream HAVE_IOSTREAM)
 check_include_file_cxx(string HAVE_STRING)
 check_include_file_cxx(exception HAVE_EXCEPTION)
 check_include_file_cxx(stdexcept HAVE_STDEXCEPT)
 check_include_file_cxx(memory HAVE_MEMORY)
-check_include_file(sqlite3.h HAVE_SQLITE3)
 
 set(EXPORT_INCLUDES
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/export
+	${CMAKE_CURRENT_SOURCE_DIR}/include/export
 )
 
 add_library(
@@ -42,9 +42,10 @@ target_include_directories(
 	${PROJECT_NAME}
 	PUBLIC
 	${EXPORT_INCLUDES}
+	${SQLITE3_INCLUDE_DIRS}
 )
 
 target_link_libraries(
 	${PROJECT_NAME}
-    sqlite3
+	${SQLITE3_LIBRARIES}
 )

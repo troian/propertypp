@@ -11,19 +11,19 @@
 
 namespace property {
 
-typedef enum {
+enum class prop_status {
 	PROP_STATUS_OK = 0,
 	PROP_STATUS_INVALID_TYPE,
 	PROP_STATUS_NOT_FOUND,
 	PROP_STATUS_ALREADY_EXISTS,
 	PROP_STATUS_UNKNOWN_ERROR
-} prop_status;
+};
 
 using sp_property = typename std::shared_ptr<class property>;
 
 class property {
 protected:
-	enum value_type {
+	enum class value_type {
 		VALUE_TYPE_STRING = 0,
 		VALUE_TYPE_INT,
 		VALUE_TYPE_INT64,
@@ -88,27 +88,27 @@ public:
 
 public: // getters
 	virtual prop_status get(const std::string &key, std::string &value) {
-		return get(key, (void *)&value, VALUE_TYPE_STRING);
+		return get(key, (void *)&value, value_type::VALUE_TYPE_STRING);
 	}
 
 	virtual prop_status get(const std::string &key, int32_t &value) {
-		return get(key, (void *)&value, VALUE_TYPE_INT);
+		return get(key, (void *)&value, value_type::VALUE_TYPE_INT);
 	}
 
 	virtual prop_status get(const std::string &key, int64_t &value) {
-		return get(key, (void *)&value, VALUE_TYPE_INT64);
+		return get(key, (void *)&value, value_type::VALUE_TYPE_INT64);
 	}
 
 	virtual prop_status get(const std::string &key, float &value) {
-		return get(key, (void *)&value, VALUE_TYPE_FLOAT);
+		return get(key, (void *)&value, value_type::VALUE_TYPE_FLOAT);
 	}
 
 	virtual prop_status get(const std::string &key, double &value) {
-		return get(key, (void *)&value, VALUE_TYPE_DOUBLE);
+		return get(key, (void *)&value, value_type::VALUE_TYPE_DOUBLE);
 	}
 
 	virtual prop_status get(const std::string &key, bool &value) {
-		return get(key, (void *)&value, VALUE_TYPE_BOOL);
+		return get(key, (void *)&value, value_type::VALUE_TYPE_BOOL);
 	}
 
 private:
@@ -119,27 +119,27 @@ private:
 
 public: // setters
 	virtual prop_status set(const std::string &key, const std::string &value, bool update = false) {
-		return set(key, (void *)&value, VALUE_TYPE_STRING, update);
+		return set(key, (void *)&value, value_type::VALUE_TYPE_STRING, update);
 	}
 
 	virtual prop_status set(const std::string &key, float value, bool update = false) {
-		return set(key, (void *)&value, VALUE_TYPE_FLOAT, update);
+		return set(key, (void *)&value, value_type::VALUE_TYPE_FLOAT, update);
 	}
 
 	virtual prop_status set(const std::string &key, double value, bool update = false) {
-		return set(key, (void *)&value, VALUE_TYPE_DOUBLE, update);
+		return set(key, (void *)&value, value_type::VALUE_TYPE_DOUBLE, update);
 	}
 
 	virtual prop_status set(const std::string &key, bool value, bool update = false) {
-		return set(key, (void *)&value, VALUE_TYPE_BOOL, update);
+		return set(key, (void *)&value, value_type::VALUE_TYPE_BOOL, update);
 	}
 
 	virtual prop_status set(const std::string &key, int32_t value, bool update = false) {
-		return set(key, (void *)&value, VALUE_TYPE_INT, update);
+		return set(key, (void *)&value, value_type::VALUE_TYPE_INT, update);
 	}
 
 	virtual prop_status set(const std::string &key, int64_t value, bool update = false) {
-		return set(key, (void *)&value, VALUE_TYPE_INT64, update);
+		return set(key, (void *)&value, value_type::VALUE_TYPE_INT64, update);
 	}
 
 public:
