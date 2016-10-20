@@ -70,35 +70,35 @@ prop_status sqlite_property::get(const std::string &key, void *value, value_type
 	if (ret == SQLITE_OK) {
 		if (rsp.found) {
 			if (type != rsp.type)
-				return PROP_STATUS_INVALID_TYPE;
+				return prop_status::PROP_STATUS_INVALID_TYPE;
 			else {
 				switch (type) {
-				case VALUE_TYPE_STRING: {
+				case value_type::VALUE_TYPE_STRING: {
 					std::string *val = reinterpret_cast<std::string *>(value);
 					*val = rsp.blob;
 					break;
 				}
-				case VALUE_TYPE_INT: {
+				case value_type::VALUE_TYPE_INT: {
 					int32_t *val = reinterpret_cast<int32_t *>(value);
 					*val = std::stoi(rsp.blob);
 					break;
 				}
-				case VALUE_TYPE_INT64: {
+				case value_type::VALUE_TYPE_INT64: {
 					int64_t *val = reinterpret_cast<int64_t *>(value);
 					*val = std::stoll(rsp.blob);
 					break;
 				}
-				case VALUE_TYPE_FLOAT: {
+				case value_type::VALUE_TYPE_FLOAT: {
 					float *val = reinterpret_cast<float *>(value);
 					*val = std::stof(rsp.blob);
 					break;
 				}
-				case VALUE_TYPE_DOUBLE: {
+				case value_type::VALUE_TYPE_DOUBLE: {
 					double *val = reinterpret_cast<double *>(value);
 					*val = std::stod(rsp.blob);
 					break;
 				}
-				case VALUE_TYPE_BOOL: {
+				case value_type::VALUE_TYPE_BOOL: {
 					bool *val = reinterpret_cast<bool *>(value);
 
 					if (rsp.blob.compare("0") == 0)
@@ -111,21 +111,21 @@ prop_status sqlite_property::get(const std::string &key, void *value, value_type
 				}
 			}
 		} else {
-			return PROP_STATUS_NOT_FOUND;
+			return prop_status::PROP_STATUS_NOT_FOUND;
 		}
 
 	} else {
 		sqlite3_free(errmsg);
 		std::cout << "Error: " << ret << std::endl;
-		return PROP_STATUS_UNKNOWN_ERROR;
+		return prop_status::PROP_STATUS_UNKNOWN_ERROR;
 	}
 
-	return PROP_STATUS_OK;
+	return prop_status::PROP_STATUS_OK;
 }
 
 prop_status sqlite_property::set(const std::string &key, void *val, value_type type, bool update)
 {
-	prop_status ret = PROP_STATUS_OK;
+	prop_status ret = prop_status::PROP_STATUS_OK;
 
 	std::string sql = "INSERT INTO " + property_table_ + "(key, value, type) values (?,?,?)";
 	sqlite3_stmt *stmt;
@@ -134,31 +134,31 @@ prop_status sqlite_property::set(const std::string &key, void *val, value_type t
 	std::string value;
 
 	switch (type) {
-	case VALUE_TYPE_STRING: {
+	case value_type::VALUE_TYPE_STRING: {
 		value = *(reinterpret_cast<std::string *>(val));
 		break;
 	}
-	case VALUE_TYPE_INT: {
+	case value_type::VALUE_TYPE_INT: {
 		int32_t *v = reinterpret_cast<int32_t *>(val);
 		value = std::to_string(*v);
 		break;
 	}
-	case VALUE_TYPE_INT64: {
+	case value_type::VALUE_TYPE_INT64: {
 		int64_t *v = reinterpret_cast<int64_t *>(val);
 		value = std::to_string(*v);
 		break;
 	}
-	case VALUE_TYPE_FLOAT: {
+	case value_type::VALUE_TYPE_FLOAT: {
 		float *v = reinterpret_cast<float *>(val);
 		value = std::to_string(*v);
 		break;
 	}
-	case VALUE_TYPE_DOUBLE: {
+	case value_type::VALUE_TYPE_DOUBLE: {
 		double *v = reinterpret_cast<double *>(val);
 		value = std::to_string(*v);
 		break;
 	}
-	case VALUE_TYPE_BOOL: {
+	case value_type::VALUE_TYPE_BOOL: {
 		bool *v = reinterpret_cast<bool *>(val);
 		value = (*v) == true ? "1" : "0";
 		break;
@@ -181,9 +181,9 @@ prop_status sqlite_property::set(const std::string &key, void *val, value_type t
 		rc = sqlite3_finalize(stmt);
 		if (rc != SQLITE_OK) {
 			if (rc == SQLITE_CONSTRAINT) {
-				ret = PROP_STATUS_ALREADY_EXISTS;
+				ret = prop_status::PROP_STATUS_ALREADY_EXISTS;
 			} else {
-				ret = PROP_STATUS_UNKNOWN_ERROR;
+				ret = prop_status::PROP_STATUS_UNKNOWN_ERROR;
 			}
 		}
 	} else {
@@ -195,7 +195,7 @@ prop_status sqlite_property::set(const std::string &key, void *val, value_type t
 
 prop_status sqlite_property::del(const std::string &key)
 {
-	prop_status ret = PROP_STATUS_OK;
+	prop_status ret = prop_status::PROP_STATUS_OK;
 
 	std::string sql = "DELETE FROM " + property_table_ + " WHERE key = \'" + key + "\'";
 
@@ -203,9 +203,9 @@ prop_status sqlite_property::del(const std::string &key)
 
 	if (sqlite3_prepare_v2(db_, sql.c_str(), sql.size(), &stmt, NULL) == SQLITE_OK) {
 		while (sqlite3_step(stmt) == SQLITE_DONE) {}
-		ret = PROP_STATUS_OK;
+		ret = prop_status::PROP_STATUS_OK;
 	} else {
-		ret = PROP_STATUS_UNKNOWN_ERROR;
+		ret = prop_status::PROP_STATUS_UNKNOWN_ERROR;
 	}
 
 	sqlite3_finalize(stmt);
