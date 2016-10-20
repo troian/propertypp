@@ -1,1 +1,1 @@
-# property
+# C++ property library
