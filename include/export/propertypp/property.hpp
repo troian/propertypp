@@ -5,6 +5,7 @@
 
 #include <cstdint>
 #include <string>
+#include <memory>
 
 #include <sqlite3.h>
 
@@ -17,6 +18,8 @@ typedef enum {
 	PROP_STATUS_ALREADY_EXISTS,
 	PROP_STATUS_UNKNOWN_ERROR
 } prop_status;
+
+using sp_property = typename std::shared_ptr<class property>;
 
 class property {
 protected:

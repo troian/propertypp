@@ -19,9 +19,10 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules)
 find_package(SQLite3 REQUIRED)
 
 check_include_file_cxx(iostream HAVE_IOSTREAM)
-check_include_file_cxx(string HAVE_MEMORY)
+check_include_file_cxx(string HAVE_STRING)
 check_include_file_cxx(exception HAVE_EXCEPTION)
 check_include_file_cxx(stdexcept HAVE_STDEXCEPT)
+check_include_file_cxx(memory HAVE_MEMORY)
 check_include_file(sqlite3.h HAVE_SQLITE3)
 
 set(EXPORT_INCLUDES
