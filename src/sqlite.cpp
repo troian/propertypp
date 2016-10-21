@@ -101,7 +101,7 @@ prop_status sqlite_property::get(const std::string &key, void *value, value_type
 				case value_type::VALUE_TYPE_BOOL: {
 					bool *val = reinterpret_cast<bool *>(value);
 
-					if (rsp.blob.compare("0") == 0)
+					if (rsp.blob.compare("false") == 0)
 						*val = false;
 					else
 						*val = true;
@@ -129,7 +129,6 @@ prop_status sqlite_property::set(const std::string &key, void *val, value_type t
 
 	std::string sql = "INSERT INTO " + property_table_ + "(key, value, type) values (?,?,?)";
 	sqlite3_stmt *stmt;
-
 
 	std::string value;
 
@@ -160,7 +159,7 @@ prop_status sqlite_property::set(const std::string &key, void *val, value_type t
 	}
 	case value_type::VALUE_TYPE_BOOL: {
 		bool *v = reinterpret_cast<bool *>(val);
-		value = (*v) == true ? "1" : "0";
+		value = (*v) == true ? "true" : "false";
 		break;
 	}
 	default:

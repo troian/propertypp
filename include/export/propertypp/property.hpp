@@ -11,6 +11,9 @@
 
 namespace property {
 
+/**
+ * \brief
+ */
 enum class prop_status {
 	PROP_STATUS_OK = 0,
 	PROP_STATUS_INVALID_TYPE,
@@ -21,8 +24,14 @@ enum class prop_status {
 
 using sp_property = typename std::shared_ptr<class property>;
 
+/**
+ * \brief
+ */
 class property {
 protected:
+	/**
+	 * \brief
+	 */
 	enum class value_type {
 		VALUE_TYPE_STRING = 0,
 		VALUE_TYPE_INT,
@@ -33,7 +42,11 @@ protected:
 	};
 
 public:
+	/**
+	 * \brief
+	 */
 	property() {};
+
 	virtual ~property() = 0;
 
 public: // getters
@@ -41,7 +54,7 @@ public: // getters
 	 * \brief  Get property
 	 *
 	 * \param[in]  key
-	 * \param[ouy] val
+	 * \param[out] val
 	 *
 	 * \retval \ref PROP_STATUS_OK - val contains property value
 	 * \retval \ref PROP_STATUS_INVALID_TYPE - property exists but with different type of it's value
@@ -65,11 +78,13 @@ public: // setters
 
 public:
 	virtual prop_status del(const std::string &key) = 0;
-
 };
 
 class sqlite_property final : public property {
 private:
+	/**
+	 * \brief
+	 */
 	class req_value {
 	public:
 		req_value() :
@@ -83,7 +98,13 @@ private:
 	};
 
 public:
+	/**
+	 * \brief
+	 *
+	 * \param db
+	 */
 	sqlite_property(const std::string &db);
+
 	virtual ~sqlite_property();
 
 public: // getters
@@ -110,12 +131,6 @@ public: // getters
 	virtual prop_status get(const std::string &key, bool &value) {
 		return get(key, (void *)&value, value_type::VALUE_TYPE_BOOL);
 	}
-
-private:
-	prop_status get(const std::string &key, void *value, value_type type);
-
-	prop_status set(const std::string &key, void *val, value_type type, bool update = false);
-
 
 public: // setters
 	virtual prop_status set(const std::string &key, const std::string &value, bool update = false) {
@@ -146,8 +161,12 @@ public:
 	virtual prop_status del(const std::string &key);
 
 private:
+	prop_status get(const std::string &key, void *value, value_type type);
+
+	prop_status set(const std::string &key, void *val, value_type type, bool update = false);
+
+private:
 	static int select_exec_cb(void *ptr, int argc, char **argv, char **names);
-	static int select_type_cb(void *ptr, int argc, char **argv, char **names);
 
 private:
 	sqlite3    *db_;
