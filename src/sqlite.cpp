@@ -1,7 +1,9 @@
 //
 // Created by Artur Troian on 10/20/16.
 //
-#include <propertypp/property.hpp>
+#include <propertypp/sqlite.hpp>
+#include <tools/base64.hpp>
+
 #include <exception>
 #include <stdexcept>
 
@@ -27,10 +29,26 @@ int sqlite_property::select_exec_cb(void *ptr, int argc, char **argv, char **nam
 	return 0;
 }
 
+int sqlite_property::type_exec_cb(void *ptr, int argc, char **argv, char **names)
+{
+	req_value *value = reinterpret_cast<req_value *>(ptr);
+
+	value->found = true;
+
+	if (argc == 1) {
+		value->type  = (value_type)atoi(argv[1]);
+		value->valid = true;
+	} else {
+		value->valid = false;
+	}
+
+	return 0;
+}
+
 const std::string sqlite_property::property_table_("property_table");
 
 sqlite_property::sqlite_property(const std::string &db) :
-	  property()
+	  prop()
 	, db_(NULL)
 {
 	std::string uri(db);
@@ -88,11 +106,6 @@ prop_status sqlite_property::get(const std::string &key, void *value, value_type
 					*val = std::stoll(rsp.blob);
 					break;
 				}
-				case value_type::VALUE_TYPE_FLOAT: {
-					float *val = reinterpret_cast<float *>(value);
-					*val = std::stof(rsp.blob);
-					break;
-				}
 				case value_type::VALUE_TYPE_DOUBLE: {
 					double *val = reinterpret_cast<double *>(value);
 					*val = std::stod(rsp.blob);
@@ -106,6 +119,13 @@ prop_status sqlite_property::get(const std::string &key, void *value, value_type
 					else
 						*val = true;
 
+					break;
+				}
+				case value_type::VALUE_TYPE_BLOB: {
+					prop::blob_type *val = reinterpret_cast<prop::blob_type *>(value);
+
+					prop::blob_type tmp = tools::base64::decode<prop::blob_type>(rsp.blob);
+					*val = std::move(tmp);
 					break;
 				}
 				}
@@ -123,7 +143,7 @@ prop_status sqlite_property::get(const std::string &key, void *value, value_type
 	return prop_status::PROP_STATUS_OK;
 }
 
-prop_status sqlite_property::set(const std::string &key, void *val, value_type type, bool update)
+prop_status sqlite_property::set(const std::string &key, const void * const val, value_type type, bool update)
 {
 	prop_status ret = prop_status::PROP_STATUS_OK;
 
@@ -134,32 +154,32 @@ prop_status sqlite_property::set(const std::string &key, void *val, value_type t
 
 	switch (type) {
 	case value_type::VALUE_TYPE_STRING: {
-		value = *(reinterpret_cast<std::string *>(val));
+		value = *(reinterpret_cast<const std::string * const>(val));
 		break;
 	}
 	case value_type::VALUE_TYPE_INT: {
-		int32_t *v = reinterpret_cast<int32_t *>(val);
+		const int32_t * const v = reinterpret_cast<const int32_t * const>(val);
 		value = std::to_string(*v);
 		break;
 	}
 	case value_type::VALUE_TYPE_INT64: {
-		int64_t *v = reinterpret_cast<int64_t *>(val);
-		value = std::to_string(*v);
-		break;
-	}
-	case value_type::VALUE_TYPE_FLOAT: {
-		float *v = reinterpret_cast<float *>(val);
+		const int64_t * const v = reinterpret_cast<const int64_t * const>(val);
 		value = std::to_string(*v);
 		break;
 	}
 	case value_type::VALUE_TYPE_DOUBLE: {
-		double *v = reinterpret_cast<double *>(val);
+		const double * const v = reinterpret_cast<const double * const>(val);
 		value = std::to_string(*v);
 		break;
 	}
 	case value_type::VALUE_TYPE_BOOL: {
-		bool *v = reinterpret_cast<bool *>(val);
+		const bool * const v = reinterpret_cast<const bool * const>(val);
 		value = (*v) == true ? "true" : "false";
+		break;
+	}
+	case value_type::VALUE_TYPE_BLOB: {
+		const prop::blob_type * const v = reinterpret_cast<const prop::blob_type * const>(val);
+		tools::base64::encode(value, v);
 		break;
 	}
 	default:
@@ -178,9 +198,40 @@ prop_status sqlite_property::set(const std::string &key, void *val, value_type t
 		// commit
 		sqlite3_step(stmt);
 		rc = sqlite3_finalize(stmt);
+
 		if (rc != SQLITE_OK) {
 			if (rc == SQLITE_CONSTRAINT) {
-				ret = prop_status::PROP_STATUS_ALREADY_EXISTS;
+				if (update == false) {
+					ret = prop_status::PROP_STATUS_ALREADY_EXISTS;
+				} else {
+					value_type prop_type;
+
+					ret = sqlite_property::type(key, prop_type);
+					if (ret == prop_status::PROP_STATUS_OK) {
+						if (prop_type != type) {
+							ret = prop_status::PROP_STATUS_INVALID_TYPE;
+						} else {
+							sql = "UPDATE " + property_table_ + " SET value = ? WHERE key = \'" + key + "\'";
+							rc = sqlite3_prepare_v2(db_, sql.c_str(), sql.size(), &stmt, NULL);
+							if (rc == SQLITE_OK) {
+								sqlite3_bind_blob(stmt, 1, value.c_str(), value.size(), NULL);
+
+								sqlite3_step(stmt);
+								rc = sqlite3_finalize(stmt);
+
+								if (rc != SQLITE_OK) {
+									ret = prop_status::PROP_STATUS_UNKNOWN_ERROR;
+									std::cerr << "Error commiting: " << sqlite3_errmsg(db_) << std::endl;
+								} else {
+									ret = prop_status::PROP_STATUS_OK;
+								}
+							} else {
+								std::cerr << "Error commiting: " << sqlite3_errmsg(db_) << std::endl;
+								ret = prop_status::PROP_STATUS_UNKNOWN_ERROR;
+							}
+						}
+					}
+				}
 			} else {
 				ret = prop_status::PROP_STATUS_UNKNOWN_ERROR;
 			}
@@ -211,4 +262,57 @@ prop_status sqlite_property::del(const std::string &key)
 
 	return ret;
 }
+
+prop_status sqlite_property::type(const std::string &key, value_type &type) const
+{
+	prop_status retval = prop_status::PROP_STATUS_OK;
+
+	std::string sql = "SELECT type FROM " + property_table_ + " WHERE key = \'" + key + "\'";
+
+	int ret;
+	char *errmsg = NULL;
+	req_value rsp;
+
+	ret = sqlite3_exec(db_, sql.c_str(), type_exec_cb, &rsp, &errmsg);
+
+	if (ret == SQLITE_OK) {
+		if (rsp.found) {
+	   	    type = rsp.type;
+		} else {
+			retval = prop_status::PROP_STATUS_NOT_FOUND;
+		}
+	} else {
+		sqlite3_free(errmsg);
+		retval = prop_status::PROP_STATUS_UNKNOWN_ERROR;
+	}
+
+	return retval;
+}
+
+prop_status sqlite_property::type(const std::string &key, value_type &type)
+{
+	prop_status retval = prop_status::PROP_STATUS_OK;
+
+	std::string sql = "SELECT type FROM " + property_table_ + " WHERE key = \'" + key + "\'";
+
+	int ret;
+	char *errmsg = NULL;
+	req_value rsp;
+
+	ret = sqlite3_exec(db_, sql.c_str(), type_exec_cb, &rsp, &errmsg);
+
+	if (ret == SQLITE_OK) {
+		if (rsp.found) {
+			type = rsp.type;
+		} else {
+			retval = prop_status::PROP_STATUS_NOT_FOUND;
+		}
+	} else {
+		sqlite3_free(errmsg);
+		retval = prop_status::PROP_STATUS_UNKNOWN_ERROR;
+	}
+
+	return retval;
+}
+
 } // namespace property
