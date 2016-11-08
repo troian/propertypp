@@ -14,6 +14,9 @@ namespace property {
 
 int sqlite_property::select_exec_cb(void *ptr, int argc, char **argv, char **names)
 {
+	// suppress: warning: unused parameter 'names' [-Wunused-parameter]
+	(void)names;
+
 	req_value *value = reinterpret_cast<req_value *>(ptr);
 
 	value->found = true;
@@ -31,6 +34,9 @@ int sqlite_property::select_exec_cb(void *ptr, int argc, char **argv, char **nam
 
 int sqlite_property::type_exec_cb(void *ptr, int argc, char **argv, char **names)
 {
+	// suppress: warning: unused parameter 'names' [-Wunused-parameter]
+	(void)names;
+
 	req_value *value = reinterpret_cast<req_value *>(ptr);
 
 	value->found = true;

@@ -10,6 +10,9 @@
 
 namespace property {
 
+/**
+ * \brief
+ */
 class sqlite_property final : public prop {
 private:
 	/**
@@ -58,7 +61,7 @@ public: // getters
 		return get(key, (void *)&value, value_type::VALUE_TYPE_BOOL);
 	}
 
-	virtual prop_status get(const std::string &key, prop::blob_type &value, bool update = false) {
+	virtual prop_status get(const std::string &key, prop::blob_type &value) {
 		return get(key, (void *)&value, value_type::VALUE_TYPE_BLOB);
 	}
 

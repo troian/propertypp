@@ -69,7 +69,7 @@ public: // getters
 	virtual prop_status get(const std::string &key, int64_t &value) = 0;
 	virtual prop_status get(const std::string &key, double &value) = 0;
 	virtual prop_status get(const std::string &key, bool &value) = 0;
-	virtual prop_status get(const std::string &key, prop::blob_type &data, bool update = false) = 0;
+	virtual prop_status get(const std::string &key, prop::blob_type &data) = 0;
 
 public: // setters
 	virtual prop_status set(const std::string &key, const std::string &val, bool update = false) = 0;
