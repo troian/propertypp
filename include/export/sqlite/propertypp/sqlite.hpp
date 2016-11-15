@@ -21,7 +21,7 @@ private:
 	class req_value {
 	public:
 		req_value() :
-			found(false)
+			  found(false)
 		{}
 
 		bool        found;
@@ -67,27 +67,27 @@ public: // getters
 
 public: // setters
 	virtual prop_status set(const std::string &key, const std::string &value, bool update = false) {
-		return set(key, (void *)&value, value_type::VALUE_TYPE_STRING, update);
+		return set(key, (const void *)&value, value_type::VALUE_TYPE_STRING, update);
 	}
 
 	virtual prop_status set(const std::string &key, double value, bool update = false) {
-		return set(key, (void *)&value, value_type::VALUE_TYPE_DOUBLE, update);
+		return set(key, (const void *)&value, value_type::VALUE_TYPE_DOUBLE, update);
 	}
 
 	virtual prop_status set(const std::string &key, bool value, bool update = false) {
-		return set(key, (void *)&value, value_type::VALUE_TYPE_BOOL, update);
+		return set(key, (const void *)&value, value_type::VALUE_TYPE_BOOL, update);
 	}
 
 	virtual prop_status set(const std::string &key, int32_t value, bool update = false) {
-		return set(key, (void *)&value, value_type::VALUE_TYPE_INT, update);
+		return set(key, (const void *)&value, value_type::VALUE_TYPE_INT, update);
 	}
 
 	virtual prop_status set(const std::string &key, int64_t value, bool update = false) {
-		return set(key, (void *)&value, value_type::VALUE_TYPE_INT64, update);
+		return set(key, (const void *)&value, value_type::VALUE_TYPE_INT64, update);
 	}
 
 	virtual prop_status set(const std::string &key, const prop::blob_type &value, bool update = false) {
-		return set(key, (void *)&value, value_type::VALUE_TYPE_BLOB, update);
+		return set(key, (const void *)&value, value_type::VALUE_TYPE_BLOB, update);
 	}
 
 public:

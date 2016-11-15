@@ -52,6 +52,10 @@ public:
 
 	virtual ~prop() = 0;
 
+protected: // Forbid copy
+	prop(prop const &) = delete;
+	void operator = (prop const &) = delete;
+
 public: // getters
 	/**
 	 * \brief  Get property

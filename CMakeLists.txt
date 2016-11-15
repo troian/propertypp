@@ -38,9 +38,9 @@ set(LIB_SOURCES
     ${EXPORT_INCLUDES}/base/propertypp/property.hpp
 )
 
-if (NOT PROPERTY_SQLITE)
-	message(FATAL_ERROR "noone from any of available property backends configured")
-endif()
+#if (NOT PROPERTY_SQLITE)
+#	message(FATAL_ERROR "noone from any of available property backends configured")
+#endif()
 
 if (PROPERTY_SQLITE)
 	set(LIB_SOURCES ${LIB_SOURCES}
