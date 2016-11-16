@@ -42,7 +42,7 @@ int sqlite_property::type_exec_cb(void *ptr, int argc, char **argv, char **names
 	value->found = true;
 
 	if (argc == 1) {
-		value->type  = (value_type)atoi(argv[1]);
+		value->type  = (value_type)atoi(argv[0]);
 		value->valid = true;
 	} else {
 		value->valid = false;
@@ -236,6 +236,8 @@ prop_status sqlite_property::set(const std::string &key, const void * const val,
 								ret = prop_status::PROP_STATUS_UNKNOWN_ERROR;
 							}
 						}
+					} else {
+						std::cerr << "Error commiting: " << sqlite3_errmsg(db_) << std::endl;
 					}
 				}
 			} else {
