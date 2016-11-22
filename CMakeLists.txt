@@ -27,7 +27,6 @@ check_include_file_cxx(string HAVE_STRING)
 check_include_file_cxx(exception HAVE_EXCEPTION)
 check_include_file_cxx(stdexcept HAVE_STDEXCEPT)
 check_include_file_cxx(memory HAVE_MEMORY)
-check_include_file_cxx(tools/base64.hpp HAVE_BASE64)
 
 set(EXPORT_INCLUDES
 	${CMAKE_CURRENT_SOURCE_DIR}/include/export
