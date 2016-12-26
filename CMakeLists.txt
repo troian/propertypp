@@ -14,13 +14,9 @@ include(CheckIncludeFileCXX)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11")
 
-option(PROPERTY_SQLITE "Build SQLite storage implementation" OFF)
+option(PROPERTY_SQLITE "Build SQLite storage implementation" ON)
 option(PROPERTY_BUILD_SHARED_LIB "Build the shared library" OFF)
 option(PROPERTY_TESTS "Build tests" OFF)
-
-
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(SQLITE3 REQUIRED sqlite3)
 
 check_include_file_cxx(iostream HAVE_IOSTREAM)
 check_include_file_cxx(string HAVE_STRING)
@@ -42,6 +38,10 @@ set(LIB_SOURCES
 #endif()
 
 if (PROPERTY_SQLITE)
+	find_package(PkgConfig REQUIRED)
+	pkg_check_modules(SQLITE3 REQUIRED sqlite3)
+	check_include_file(sqlite3.h HAVE_MEMORY)
+
 	set(LIB_SOURCES ${LIB_SOURCES}
 	    ${CMAKE_CURRENT_SOURCE_DIR}/src/sqlite.cpp
 	    ${EXPORT_INCLUDES}/sqlite/propertypp/sqlite.hpp

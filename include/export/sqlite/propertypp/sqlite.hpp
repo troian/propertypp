@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <string>
+#include <sqlite3.h>
 
 namespace property {
 
@@ -22,6 +23,8 @@ private:
 	public:
 		req_value() :
 			  found(false)
+			, valid(false)
+			, blob()
 		{}
 
 		bool        found;
@@ -34,9 +37,9 @@ public:
 	/**
 	 * \brief
 	 *
-	 * \param db
+	 * \param[in]  db
 	 */
-	sqlite_property(const std::string &db);
+	explicit sqlite_property(const std::string &db);
 
 	virtual ~sqlite_property();
 

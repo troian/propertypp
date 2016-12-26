@@ -25,6 +25,8 @@ enum class prop_status {
 
 using sp_property = typename std::shared_ptr<class prop>;
 
+using up_property = typename std::unique_ptr<class prop>;
+
 /**
  * \brief
  */

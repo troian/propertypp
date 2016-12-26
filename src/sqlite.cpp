@@ -57,8 +57,6 @@ sqlite_property::sqlite_property(const std::string &db) :
 	  prop()
 	, db_(NULL)
 {
-	std::string uri(db);
-
 	if (sqlite3_open(db.c_str(), &db_) != SQLITE_OK) {
 		std::string error ("Couldn't open database file");
 		error += sqlite3_errmsg(db_);
@@ -180,7 +178,7 @@ prop_status sqlite_property::set(const std::string &key, const void * const val,
 	}
 	case value_type::VALUE_TYPE_BOOL: {
 		const bool * const v = reinterpret_cast<const bool * const>(val);
-		value = (*v) == true ? "true" : "false";
+		value = *v ? "true" : "false";
 		break;
 	}
 	case value_type::VALUE_TYPE_BLOB: {
@@ -188,8 +186,6 @@ prop_status sqlite_property::set(const std::string &key, const void * const val,
 		tools::base64::encode(value, v);
 		break;
 	}
-	default:
-		break;
 	}
 
 	int rc = sqlite3_prepare_v2(db_, sql.c_str(), sql.size(), &stmt, NULL);
@@ -207,7 +203,7 @@ prop_status sqlite_property::set(const std::string &key, const void * const val,
 
 		if (rc != SQLITE_OK) {
 			if (rc == SQLITE_CONSTRAINT) {
-				if (update == false) {
+				if (!update) {
 					ret = prop_status::PROP_STATUS_ALREADY_EXISTS;
 				} else {
 					value_type prop_type;
