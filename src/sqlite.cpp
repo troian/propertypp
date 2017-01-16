@@ -80,7 +80,7 @@ sqlite_property::~sqlite_property()
 	sqlite3_close(db_);
 }
 
-prop_status sqlite_property::get(const std::string &key, void *value, value_type type)
+status sqlite_property::get(const std::string &key, void *value, value_type type)
 {
 	std::string sql = "SELECT value, type FROM " + property_table_ + " WHERE key = \'" + key + "\'";
 	int ret;
@@ -92,7 +92,7 @@ prop_status sqlite_property::get(const std::string &key, void *value, value_type
 	if (ret == SQLITE_OK) {
 		if (rsp.found) {
 			if (type != rsp.type)
-				return prop_status::PROP_STATUS_INVALID_TYPE;
+				return status::INVALID_TYPE;
 			else {
 				switch (type) {
 				case value_type::VALUE_TYPE_STRING: {
@@ -135,21 +135,21 @@ prop_status sqlite_property::get(const std::string &key, void *value, value_type
 				}
 			}
 		} else {
-			return prop_status::PROP_STATUS_NOT_FOUND;
+			return status::NOT_FOUND;
 		}
 
 	} else {
 		sqlite3_free(errmsg);
 		std::cout << "Error: " << ret << std::endl;
-		return prop_status::PROP_STATUS_UNKNOWN_ERROR;
+		return status::UNKNOWN_ERROR;
 	}
 
-	return prop_status::PROP_STATUS_OK;
+	return status::OK;
 }
 
-prop_status sqlite_property::set(const std::string &key, const void * const val, value_type type, bool update)
+status sqlite_property::set(const std::string &key, const void * const val, value_type type, bool update)
 {
-	prop_status ret = prop_status::PROP_STATUS_OK;
+	status ret = status::OK;
 
 	std::string sql = "INSERT INTO " + property_table_ + "(key, value, type) values (?,?,?)";
 	sqlite3_stmt *stmt;
@@ -204,14 +204,14 @@ prop_status sqlite_property::set(const std::string &key, const void * const val,
 		if (rc != SQLITE_OK) {
 			if (rc == SQLITE_CONSTRAINT) {
 				if (!update) {
-					ret = prop_status::PROP_STATUS_ALREADY_EXISTS;
+					ret = status::ALREADY_EXISTS;
 				} else {
 					value_type prop_type;
 
 					ret = sqlite_property::type(key, prop_type);
-					if (ret == prop_status::PROP_STATUS_OK) {
+					if (ret == status::OK) {
 						if (prop_type != type) {
-							ret = prop_status::PROP_STATUS_INVALID_TYPE;
+							ret = status::INVALID_TYPE;
 						} else {
 							sql = "UPDATE " + property_table_ + " SET value = ? WHERE key = \'" + key + "\'";
 							rc = sqlite3_prepare_v2(db_, sql.c_str(), sql.size(), &stmt, NULL);
@@ -222,14 +222,14 @@ prop_status sqlite_property::set(const std::string &key, const void * const val,
 								rc = sqlite3_finalize(stmt);
 
 								if (rc != SQLITE_OK) {
-									ret = prop_status::PROP_STATUS_UNKNOWN_ERROR;
+									ret = status::UNKNOWN_ERROR;
 									std::cerr << "Error commiting: " << sqlite3_errmsg(db_) << std::endl;
 								} else {
-									ret = prop_status::PROP_STATUS_OK;
+									ret = status::OK;
 								}
 							} else {
 								std::cerr << "Error commiting: " << sqlite3_errmsg(db_) << std::endl;
-								ret = prop_status::PROP_STATUS_UNKNOWN_ERROR;
+								ret = status::UNKNOWN_ERROR;
 							}
 						}
 					} else {
@@ -237,7 +237,7 @@ prop_status sqlite_property::set(const std::string &key, const void * const val,
 					}
 				}
 			} else {
-				ret = prop_status::PROP_STATUS_UNKNOWN_ERROR;
+				ret = status::UNKNOWN_ERROR;
 			}
 		}
 	} else {
@@ -247,9 +247,9 @@ prop_status sqlite_property::set(const std::string &key, const void * const val,
 	return ret;
 }
 
-prop_status sqlite_property::del(const std::string &key)
+status sqlite_property::del(const std::string &key)
 {
-	prop_status ret = prop_status::PROP_STATUS_OK;
+	status ret = status::OK;
 
 	std::string sql = "DELETE FROM " + property_table_ + " WHERE key = \'" + key + "\'";
 
@@ -257,9 +257,9 @@ prop_status sqlite_property::del(const std::string &key)
 
 	if (sqlite3_prepare_v2(db_, sql.c_str(), sql.size(), &stmt, NULL) == SQLITE_OK) {
 		while (sqlite3_step(stmt) == SQLITE_DONE) {}
-		ret = prop_status::PROP_STATUS_OK;
+		ret = status::OK;
 	} else {
-		ret = prop_status::PROP_STATUS_UNKNOWN_ERROR;
+		ret = status::UNKNOWN_ERROR;
 	}
 
 	sqlite3_finalize(stmt);
@@ -267,9 +267,9 @@ prop_status sqlite_property::del(const std::string &key)
 	return ret;
 }
 
-prop_status sqlite_property::type(const std::string &key, value_type &type) const
+status sqlite_property::type(const std::string &key, value_type &type) const
 {
-	prop_status retval = prop_status::PROP_STATUS_OK;
+	status retval = status::OK;
 
 	std::string sql = "SELECT type FROM " + property_table_ + " WHERE key = \'" + key + "\'";
 
@@ -283,19 +283,19 @@ prop_status sqlite_property::type(const std::string &key, value_type &type) cons
 		if (rsp.found) {
 	   	    type = rsp.type;
 		} else {
-			retval = prop_status::PROP_STATUS_NOT_FOUND;
+			retval = status::NOT_FOUND;
 		}
 	} else {
 		sqlite3_free(errmsg);
-		retval = prop_status::PROP_STATUS_UNKNOWN_ERROR;
+		retval = status::UNKNOWN_ERROR;
 	}
 
 	return retval;
 }
 
-prop_status sqlite_property::type(const std::string &key, value_type &type)
+status sqlite_property::type(const std::string &key, value_type &type)
 {
-	prop_status retval = prop_status::PROP_STATUS_OK;
+	status retval = status::OK;
 
 	std::string sql = "SELECT type FROM " + property_table_ + " WHERE key = \'" + key + "\'";
 
@@ -309,11 +309,11 @@ prop_status sqlite_property::type(const std::string &key, value_type &type)
 		if (rsp.found) {
 			type = rsp.type;
 		} else {
-			retval = prop_status::PROP_STATUS_NOT_FOUND;
+			retval = status::NOT_FOUND;
 		}
 	} else {
 		sqlite3_free(errmsg);
-		retval = prop_status::PROP_STATUS_UNKNOWN_ERROR;
+		retval = status::UNKNOWN_ERROR;
 	}
 
 	return retval;

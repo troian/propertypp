@@ -15,12 +15,12 @@ namespace property {
 /**
  * \brief
  */
-enum class prop_status {
-	PROP_STATUS_OK = 0,
-	PROP_STATUS_INVALID_TYPE,
-	PROP_STATUS_NOT_FOUND,
-	PROP_STATUS_ALREADY_EXISTS,
-	PROP_STATUS_UNKNOWN_ERROR
+enum class status {
+	OK = 0,
+	INVALID_TYPE,
+	NOT_FOUND,
+	ALREADY_EXISTS,
+	UNKNOWN_ERROR
 };
 
 using sp_property = typename std::shared_ptr<class prop>;
@@ -70,27 +70,27 @@ public: // getters
 	 * \retval \ref PROP_STATUS_NOT_FOUND - property does not exists
 	 * \retval \ret PROP_STATUS_UNKNOWN_ERROR - some unexpected shit happend
 	 */
-	virtual prop_status get(const std::string &key, std::string &val) = 0;
-	virtual prop_status get(const std::string &key, int32_t &value) = 0;
-	virtual prop_status get(const std::string &key, int64_t &value) = 0;
-	virtual prop_status get(const std::string &key, double &value) = 0;
-	virtual prop_status get(const std::string &key, bool &value) = 0;
-	virtual prop_status get(const std::string &key, prop::blob_type &data) = 0;
+	virtual status get(const std::string &key, std::string &val) = 0;
+	virtual status get(const std::string &key, int32_t &value) = 0;
+	virtual status get(const std::string &key, int64_t &value) = 0;
+	virtual status get(const std::string &key, double &value) = 0;
+	virtual status get(const std::string &key, bool &value) = 0;
+	virtual status get(const std::string &key, prop::blob_type &data) = 0;
 
 public: // setters
-	virtual prop_status set(const std::string &key, const std::string &val, bool update = false) = 0;
-	virtual prop_status set(const std::string &key, double value, bool update = false) = 0;
-	virtual prop_status set(const std::string &key, bool value, bool update = false) = 0;
-	virtual prop_status set(const std::string &key, int32_t value, bool update = false) = 0;
-	virtual prop_status set(const std::string &key, int64_t value, bool update = false) = 0;
-	virtual prop_status set(const std::string &key, const prop::blob_type &data, bool update = false) = 0;
+	virtual status set(const std::string &key, const std::string &val, bool update = false) = 0;
+	virtual status set(const std::string &key, double value, bool update = false) = 0;
+	virtual status set(const std::string &key, bool value, bool update = false) = 0;
+	virtual status set(const std::string &key, int32_t value, bool update = false) = 0;
+	virtual status set(const std::string &key, int64_t value, bool update = false) = 0;
+	virtual status set(const std::string &key, const prop::blob_type &data, bool update = false) = 0;
 
 public:
-	virtual prop_status type(const std::string &key, value_type &type) const = 0;
-	virtual prop_status type(const std::string &key, value_type &type) = 0;
+	virtual status type(const std::string &key, value_type &type) const = 0;
+	virtual status type(const std::string &key, value_type &type) = 0;
 
 public:
-	virtual prop_status del(const std::string &key) = 0;
+	virtual status del(const std::string &key) = 0;
 };
 
 } // namespace property
