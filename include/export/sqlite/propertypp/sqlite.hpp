@@ -45,52 +45,52 @@ public:
 
 public: // getters
 	virtual status get(const std::string &key, std::string &value) {
-		return get(key, (void *)&value, value_type::VALUE_TYPE_STRING);
+		return get(key, (void *)&value, value_type::STRING);
 	}
 
 	virtual status get(const std::string &key, int32_t &value) {
-		return get(key, (void *)&value, value_type::VALUE_TYPE_INT);
+		return get(key, (void *)&value, value_type::INT);
 	}
 
 	virtual status get(const std::string &key, int64_t &value) {
-		return get(key, (void *)&value, value_type::VALUE_TYPE_INT64);
+		return get(key, (void *)&value, value_type::INT64);
 	}
 
 	virtual status get(const std::string &key, double &value) {
-		return get(key, (void *)&value, value_type::VALUE_TYPE_DOUBLE);
+		return get(key, (void *)&value, value_type::DOUBLE);
 	}
 
 	virtual status get(const std::string &key, bool &value) {
-		return get(key, (void *)&value, value_type::VALUE_TYPE_BOOL);
+		return get(key, (void *)&value, value_type::BOOL);
 	}
 
 	virtual status get(const std::string &key, prop::blob_type &value) {
-		return get(key, (void *)&value, value_type::VALUE_TYPE_BLOB);
+		return get(key, (void *)&value, value_type::BLOB);
 	}
 
 public: // setters
 	virtual status set(const std::string &key, const std::string &value, bool update = false) {
-		return set(key, (const void *)&value, value_type::VALUE_TYPE_STRING, update);
+		return set(key, (const void *)&value, value_type::STRING, update);
 	}
 
 	virtual status set(const std::string &key, double value, bool update = false) {
-		return set(key, (const void *)&value, value_type::VALUE_TYPE_DOUBLE, update);
+		return set(key, (const void *)&value, value_type::DOUBLE, update);
 	}
 
 	virtual status set(const std::string &key, bool value, bool update = false) {
-		return set(key, (const void *)&value, value_type::VALUE_TYPE_BOOL, update);
+		return set(key, (const void *)&value, value_type::BOOL, update);
 	}
 
 	virtual status set(const std::string &key, int32_t value, bool update = false) {
-		return set(key, (const void *)&value, value_type::VALUE_TYPE_INT, update);
+		return set(key, (const void *)&value, value_type::INT, update);
 	}
 
 	virtual status set(const std::string &key, int64_t value, bool update = false) {
-		return set(key, (const void *)&value, value_type::VALUE_TYPE_INT64, update);
+		return set(key, (const void *)&value, value_type::INT64, update);
 	}
 
 	virtual status set(const std::string &key, const prop::blob_type &value, bool update = false) {
-		return set(key, (const void *)&value, value_type::VALUE_TYPE_BLOB, update);
+		return set(key, (const void *)&value, value_type::BLOB, update);
 	}
 
 public:

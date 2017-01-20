@@ -84,7 +84,7 @@ if (PROPERTY_TESTS)
 	include_directories(${PROJECT_SOURCE_DIR}/gtest/googletest/include)
 
 	if (PROPERTY_SQLITE)
-		set(PROPERTY_SQLITE_TEST_SRS ${PROJECT_SOURCE_DIR}/tests/sqlite_test.cpp)
+		set(PROPERTY_SQLITE_TEST_SRS ${CMAKE_CURRENT_SOURCE_DIR}/tests/sqlite_test.cpp)
 
 		add_executable(property_sqlite_test ${PROPERTY_SQLITE_TEST_SRS})
 

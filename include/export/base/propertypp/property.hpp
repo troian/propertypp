@@ -38,12 +38,12 @@ public:
 	 * \brief
 	 */
 	enum class value_type {
-		VALUE_TYPE_STRING = 0,
-		VALUE_TYPE_INT = 1,
-		VALUE_TYPE_INT64 = 2,
-		VALUE_TYPE_DOUBLE = 3,
-		VALUE_TYPE_BOOL = 4,
-		VALUE_TYPE_BLOB = 5
+		STRING = 0,
+		INT = 1,
+		INT64 = 2,
+		DOUBLE = 3,
+		BOOL = 4,
+		BLOB = 5
 	};
 
 public:

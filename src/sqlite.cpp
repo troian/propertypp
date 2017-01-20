@@ -95,27 +95,27 @@ status sqlite_property::get(const std::string &key, void *value, value_type type
 				return status::INVALID_TYPE;
 			else {
 				switch (type) {
-				case value_type::VALUE_TYPE_STRING: {
+				case value_type::STRING: {
 					std::string *val = reinterpret_cast<std::string *>(value);
 					*val = rsp.blob;
 					break;
 				}
-				case value_type::VALUE_TYPE_INT: {
+				case value_type::INT: {
 					int32_t *val = reinterpret_cast<int32_t *>(value);
 					*val = std::stoi(rsp.blob);
 					break;
 				}
-				case value_type::VALUE_TYPE_INT64: {
+				case value_type::INT64: {
 					int64_t *val = reinterpret_cast<int64_t *>(value);
 					*val = std::stoll(rsp.blob);
 					break;
 				}
-				case value_type::VALUE_TYPE_DOUBLE: {
+				case value_type::DOUBLE: {
 					double *val = reinterpret_cast<double *>(value);
 					*val = std::stod(rsp.blob);
 					break;
 				}
-				case value_type::VALUE_TYPE_BOOL: {
+				case value_type::BOOL: {
 					bool *val = reinterpret_cast<bool *>(value);
 
 					if (rsp.blob.compare("false") == 0)
@@ -125,7 +125,7 @@ status sqlite_property::get(const std::string &key, void *value, value_type type
 
 					break;
 				}
-				case value_type::VALUE_TYPE_BLOB: {
+				case value_type::BLOB: {
 					prop::blob_type *val = reinterpret_cast<prop::blob_type *>(value);
 
 					prop::blob_type tmp = tools::base64::decode<prop::blob_type>(rsp.blob);
@@ -157,31 +157,31 @@ status sqlite_property::set(const std::string &key, const void * const val, valu
 	std::string value;
 
 	switch (type) {
-	case value_type::VALUE_TYPE_STRING: {
+	case value_type::STRING: {
 		value = *(reinterpret_cast<const std::string * const>(val));
 		break;
 	}
-	case value_type::VALUE_TYPE_INT: {
+	case value_type::INT: {
 		const int32_t * const v = reinterpret_cast<const int32_t * const>(val);
 		value = std::to_string(*v);
 		break;
 	}
-	case value_type::VALUE_TYPE_INT64: {
+	case value_type::INT64: {
 		const int64_t * const v = reinterpret_cast<const int64_t * const>(val);
 		value = std::to_string(*v);
 		break;
 	}
-	case value_type::VALUE_TYPE_DOUBLE: {
+	case value_type::DOUBLE: {
 		const double * const v = reinterpret_cast<const double * const>(val);
 		value = std::to_string(*v);
 		break;
 	}
-	case value_type::VALUE_TYPE_BOOL: {
+	case value_type::BOOL: {
 		const bool * const v = reinterpret_cast<const bool * const>(val);
 		value = *v ? "true" : "false";
 		break;
 	}
-	case value_type::VALUE_TYPE_BLOB: {
+	case value_type::BLOB: {
 		const prop::blob_type * const v = reinterpret_cast<const prop::blob_type * const>(val);
 		tools::base64::encode(value, v);
 		break;
