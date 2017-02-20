@@ -1,18 +1,18 @@
 //
 // Created by Artur Troian on 10/20/16.
 //
-#include <propertypp/sqlite.hpp>
-#include <tools/base64.hpp>
-
-#include <exception>
-#include <stdexcept>
 
 #include <cstdlib>
 #include <iostream>
+#include <exception>
+#include <stdexcept>
+
+#include <propertypp/sqlite.hpp>
+#include <tools/base64.hpp>
 
 namespace property {
 
-int sqlite_property::select_exec_cb(void *ptr, int argc, char **argv, char **names)
+int sqlite::select_exec_cb(void *ptr, int argc, char **argv, char **names)
 {
 	// suppress: warning: unused parameter 'names' [-Wunused-parameter]
 	(void)names;
@@ -23,7 +23,7 @@ int sqlite_property::select_exec_cb(void *ptr, int argc, char **argv, char **nam
 
 	if (argc == 2) {
 		value->blob  = std::string(argv[0]);
-		value->type  = (value_type)atoi(argv[1]);
+		value->type  = static_cast<value_type>(atoi(argv[1]));
 		value->valid = true;
 	} else {
 		value->valid = false;
@@ -32,7 +32,7 @@ int sqlite_property::select_exec_cb(void *ptr, int argc, char **argv, char **nam
 	return 0;
 }
 
-int sqlite_property::type_exec_cb(void *ptr, int argc, char **argv, char **names)
+int sqlite::type_exec_cb(void *ptr, int argc, char **argv, char **names)
 {
 	// suppress: warning: unused parameter 'names' [-Wunused-parameter]
 	(void)names;
@@ -42,7 +42,7 @@ int sqlite_property::type_exec_cb(void *ptr, int argc, char **argv, char **names
 	value->found = true;
 
 	if (argc == 1) {
-		value->type  = (value_type)atoi(argv[0]);
+		value->type  = static_cast<value_type>(atoi(argv[0]));
 		value->valid = true;
 	} else {
 		value->valid = false;
@@ -51,9 +51,9 @@ int sqlite_property::type_exec_cb(void *ptr, int argc, char **argv, char **names
 	return 0;
 }
 
-const std::string sqlite_property::property_table_("property_table");
+const char sqlite::property_table_[] = "property_table";
 
-sqlite_property::sqlite_property(const std::string &db) :
+sqlite::sqlite(const std::string &db) :
 	  prop()
 	, db_(NULL)
 {
@@ -75,14 +75,14 @@ sqlite_property::sqlite_property(const std::string &db) :
 	}
 }
 
-sqlite_property::~sqlite_property()
+sqlite::~sqlite()
 {
 	sqlite3_close(db_);
 }
 
-status sqlite_property::get(const std::string &key, void *value, value_type type)
+status sqlite::get(const std::string &key, void *value, value_type type)
 {
-	std::string sql = "SELECT value, type FROM " + property_table_ + " WHERE key = \'" + key + "\'";
+	std::string sql = "SELECT value, type FROM " + std::string(property_table_) + " WHERE key = \'" + key + "\'";
 	int ret;
 	char *errmsg = NULL;
 	req_value rsp;
@@ -91,9 +91,9 @@ status sqlite_property::get(const std::string &key, void *value, value_type type
 
 	if (ret == SQLITE_OK) {
 		if (rsp.found) {
-			if (type != rsp.type)
+			if (type != rsp.type) {
 				return status::INVALID_TYPE;
-			else {
+			} else {
 				switch (type) {
 				case value_type::STRING: {
 					std::string *val = reinterpret_cast<std::string *>(value);
@@ -118,10 +118,7 @@ status sqlite_property::get(const std::string &key, void *value, value_type type
 				case value_type::BOOL: {
 					bool *val = reinterpret_cast<bool *>(value);
 
-					if (rsp.blob.compare("false") == 0)
-						*val = false;
-					else
-						*val = true;
+					*val = rsp.blob.compare("false") != 0;
 
 					break;
 				}
@@ -147,11 +144,11 @@ status sqlite_property::get(const std::string &key, void *value, value_type type
 	return status::OK;
 }
 
-status sqlite_property::set(const std::string &key, const void * const val, value_type type, bool update)
+status sqlite::set(const std::string &key, const void * const val, value_type type, bool update)
 {
 	status ret = status::OK;
 
-	std::string sql = "INSERT INTO " + property_table_ + "(key, value, type) values (?,?,?)";
+	std::string sql = "INSERT INTO " + std::string(property_table_) + "(key, value, type) values (?,?,?)";
 	sqlite3_stmt *stmt;
 
 	std::string value;
@@ -195,7 +192,7 @@ status sqlite_property::set(const std::string &key, const void * const val, valu
 
 		sqlite3_bind_text(stmt, 1, key.c_str(), key.size(), 0);
 		sqlite3_bind_blob(stmt, 2, value.c_str(), value.size(), NULL);
-		sqlite3_bind_int(stmt, 3, (int)type);
+		sqlite3_bind_int(stmt, 3, static_cast<int>(type));
 
 		// commit
 		sqlite3_step(stmt);
@@ -208,12 +205,12 @@ status sqlite_property::set(const std::string &key, const void * const val, valu
 				} else {
 					value_type prop_type;
 
-					ret = sqlite_property::type(key, prop_type);
+					ret = sqlite::type(key, prop_type);
 					if (ret == status::OK) {
 						if (prop_type != type) {
 							ret = status::INVALID_TYPE;
 						} else {
-							sql = "UPDATE " + property_table_ + " SET value = ? WHERE key = \'" + key + "\'";
+							sql = "UPDATE " + std::string(property_table_) + " SET value = ? WHERE key = \'" + key + "\'";
 							rc = sqlite3_prepare_v2(db_, sql.c_str(), sql.size(), &stmt, NULL);
 							if (rc == SQLITE_OK) {
 								sqlite3_bind_blob(stmt, 1, value.c_str(), value.size(), NULL);
@@ -247,11 +244,11 @@ status sqlite_property::set(const std::string &key, const void * const val, valu
 	return ret;
 }
 
-status sqlite_property::del(const std::string &key)
+status sqlite::del(const std::string &key)
 {
 	status ret = status::OK;
 
-	std::string sql = "DELETE FROM " + property_table_ + " WHERE key = \'" + key + "\'";
+	std::string sql = "DELETE FROM " + std::string(property_table_) + " WHERE key = \'" + key + "\'";
 
 	sqlite3_stmt *stmt;
 
@@ -267,11 +264,11 @@ status sqlite_property::del(const std::string &key)
 	return ret;
 }
 
-status sqlite_property::type(const std::string &key, value_type &type) const
+status sqlite::type(const std::string &key, value_type &type) const
 {
 	status retval = status::OK;
 
-	std::string sql = "SELECT type FROM " + property_table_ + " WHERE key = \'" + key + "\'";
+	std::string sql = "SELECT type FROM " + std::string(property_table_) + " WHERE key = \'" + key + "\'";
 
 	int ret;
 	char *errmsg = NULL;
@@ -293,11 +290,11 @@ status sqlite_property::type(const std::string &key, value_type &type) const
 	return retval;
 }
 
-status sqlite_property::type(const std::string &key, value_type &type)
+status sqlite::type(const std::string &key, value_type &type)
 {
 	status retval = status::OK;
 
-	std::string sql = "SELECT type FROM " + property_table_ + " WHERE key = \'" + key + "\'";
+	std::string sql = "SELECT type FROM " + std::string(property_table_) + " WHERE key = \'" + key + "\'";
 
 	int ret;
 	char *errmsg = NULL;

@@ -8,8 +8,6 @@
 #include <vector>
 #include <memory>
 
-#include <sqlite3.h>
-
 namespace property {
 
 /**
@@ -50,13 +48,13 @@ public:
 	/**
 	 * \brief
 	 */
-	prop() {};
+	prop() {}
 
 	virtual ~prop() = 0;
 
-protected: // Forbid copy
+private: // Forbid copy
 	prop(prop const &) = delete;
-	void operator = (prop const &) = delete;
+	prop &operator = (prop const &) = delete;
 
 public: // getters
 	/**

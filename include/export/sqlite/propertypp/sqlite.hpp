@@ -3,18 +3,19 @@
 //
 #pragma once
 
-#include <propertypp/property.hpp>
+#include <sqlite3.h>
 
 #include <vector>
 #include <string>
-#include <sqlite3.h>
+
+#include <propertypp/property.hpp>
 
 namespace property {
 
 /**
  * \brief
  */
-class sqlite_property final : public prop {
+class sqlite final : public prop {
 private:
 	/**
 	 * \brief
@@ -25,6 +26,7 @@ private:
 			  found(false)
 			, valid(false)
 			, blob()
+			, type(value_type::STRING)
 		{}
 
 		bool        found;
@@ -39,58 +41,63 @@ public:
 	 *
 	 * \param[in]  db
 	 */
-	explicit sqlite_property(const std::string &db);
+	explicit sqlite(const std::string &db);
 
-	virtual ~sqlite_property();
+	virtual ~sqlite();
+
+private:
+private: // Forbid copy
+	sqlite(sqlite const &) = delete;
+	sqlite &operator = (sqlite const &) = delete;
 
 public: // getters
 	virtual status get(const std::string &key, std::string &value) {
-		return get(key, (void *)&value, value_type::STRING);
+		return get(key, static_cast<void *>(&value), value_type::STRING);
 	}
 
 	virtual status get(const std::string &key, int32_t &value) {
-		return get(key, (void *)&value, value_type::INT);
+		return get(key, static_cast<void *>(&value), value_type::INT);
 	}
 
 	virtual status get(const std::string &key, int64_t &value) {
-		return get(key, (void *)&value, value_type::INT64);
+		return get(key, static_cast<void *>(&value), value_type::INT64);
 	}
 
 	virtual status get(const std::string &key, double &value) {
-		return get(key, (void *)&value, value_type::DOUBLE);
+		return get(key, static_cast<void *>(&value), value_type::DOUBLE);
 	}
 
 	virtual status get(const std::string &key, bool &value) {
-		return get(key, (void *)&value, value_type::BOOL);
+		return get(key, static_cast<void *>(&value), value_type::BOOL);
 	}
 
 	virtual status get(const std::string &key, prop::blob_type &value) {
-		return get(key, (void *)&value, value_type::BLOB);
+		return get(key, static_cast<void *>(&value), value_type::BLOB);
 	}
 
 public: // setters
 	virtual status set(const std::string &key, const std::string &value, bool update = false) {
-		return set(key, (const void *)&value, value_type::STRING, update);
+		return set(key, static_cast<const void *>(&value), value_type::STRING, update);
 	}
 
 	virtual status set(const std::string &key, double value, bool update = false) {
-		return set(key, (const void *)&value, value_type::DOUBLE, update);
+		return set(key, static_cast<const void *>(&value), value_type::DOUBLE, update);
 	}
 
 	virtual status set(const std::string &key, bool value, bool update = false) {
-		return set(key, (const void *)&value, value_type::BOOL, update);
+		return set(key, static_cast<const void *>(&value), value_type::BOOL, update);
 	}
 
 	virtual status set(const std::string &key, int32_t value, bool update = false) {
-		return set(key, (const void *)&value, value_type::INT, update);
+		return set(key, static_cast<const void *>(&value), value_type::INT, update);
 	}
 
 	virtual status set(const std::string &key, int64_t value, bool update = false) {
-		return set(key, (const void *)&value, value_type::INT64, update);
+		return set(key, static_cast<const void *>(&value), value_type::INT64, update);
 	}
 
 	virtual status set(const std::string &key, const prop::blob_type &value, bool update = false) {
-		return set(key, (const void *)&value, value_type::BLOB, update);
+		return set(key, static_cast<const void *>(&value), value_type::BLOB, update);
 	}
 
 public:
@@ -115,7 +122,7 @@ private:
 	sqlite3    *db_;
 
 private:
-	static const std::string property_table_;
+	static const char property_table_[];
 };
 
 } // namespace property

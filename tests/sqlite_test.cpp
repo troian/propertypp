@@ -3,16 +3,17 @@
 //
 
 #include <gtest/gtest.h>
-#include <propertypp/sqlite.hpp>
-#include <propertypp/property.hpp>
 
 #include <cstdint>
 #include <cmath>
 #include <limits>
 
-using namespace property;
+#include <propertypp/sqlite.hpp>
+#include <propertypp/property.hpp>
 
-static const std::string db_file("test.db");
+using property;
+
+static const char db_file[] = "test.db";
 
 bool compare_doubles(double a, double b) {
 	if (std::fabs(a - b) < std::numeric_limits<double>::epsilon())
@@ -25,7 +26,7 @@ TEST(Database, create_close_drop)
 {
 	{
 		// Try to open the non-existing database
-		EXPECT_NO_THROW(sqlite_property prop("test.db"));
+		EXPECT_NO_THROW(sqlite_property prop(db_file));
 	}
 	remove(db_file.c_str());
 }
@@ -35,11 +36,11 @@ TEST(Database, create_close_reopen)
 	remove(db_file.c_str());
 	{
 		// Try to open the non-existing database
-		EXPECT_NO_THROW(sqlite_property prop("test.db"));
+		EXPECT_NO_THROW(sqlite_property prop(db_file));
 	} // Close DB test.db
 	{
 		// Reopen the database file
-		EXPECT_NO_THROW(sqlite_property prop("test.db"));
+		EXPECT_NO_THROW(sqlite_property prop(db_file));
 	}
 
 	remove(db_file.c_str());
@@ -50,7 +51,7 @@ TEST(Database, set_get_del)
 	remove(db_file.c_str());
 
 	{
-		sqlite_property prop("test.db");
+		sqlite_property prop(db_file);
 
 		// Check string
 		std::string val_str;
@@ -72,7 +73,7 @@ TEST(Database, set_get_del)
 
 		// Check bool
 		bool val_bool;
-		EXPECT_EQ(prop_status::PROP_STATUS_OK, prop.set("key_bool", (bool)true));
+		EXPECT_EQ(prop_status::PROP_STATUS_OK, prop.set("key_bool", static_cast<bool>(true)));
 		EXPECT_EQ(prop_status::PROP_STATUS_OK, prop.get("key_bool", val_bool));
 		EXPECT_EQ(false, val_bool == false);
 

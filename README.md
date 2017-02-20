@@ -28,7 +28,7 @@ int main()
 {
 	sp_property prop;
 	try {
-		prop = std::make_shared<sqlite_property>(property_file);
+		prop = std::make_shared<sqlite>(property_file);
 	} catch (const std::exception &e) {
 		std::cerr << e.what() << std::endl;
 		return 1;
