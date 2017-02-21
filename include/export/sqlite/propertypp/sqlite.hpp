@@ -51,67 +51,67 @@ private: // Forbid copy
 	sqlite &operator = (sqlite const &) = delete;
 
 public: // getters
-	virtual status get(const std::string &key, std::string &value) {
+	virtual property::status get(const std::string &key, std::string &value) {
 		return get(key, static_cast<void *>(&value), value_type::STRING);
 	}
 
-	virtual status get(const std::string &key, int32_t &value) {
+	virtual property::status get(const std::string &key, int32_t &value) {
 		return get(key, static_cast<void *>(&value), value_type::INT);
 	}
 
-	virtual status get(const std::string &key, int64_t &value) {
+	virtual property::status get(const std::string &key, int64_t &value) {
 		return get(key, static_cast<void *>(&value), value_type::INT64);
 	}
 
-	virtual status get(const std::string &key, double &value) {
+	virtual property::status get(const std::string &key, double &value) {
 		return get(key, static_cast<void *>(&value), value_type::DOUBLE);
 	}
 
-	virtual status get(const std::string &key, bool &value) {
+	virtual property::status get(const std::string &key, bool &value) {
 		return get(key, static_cast<void *>(&value), value_type::BOOL);
 	}
 
-	virtual status get(const std::string &key, prop::blob_type &value) {
+	virtual property::status get(const std::string &key, prop::blob_type &value) {
 		return get(key, static_cast<void *>(&value), value_type::BLOB);
 	}
 
 public: // setters
-	virtual status set(const std::string &key, const std::string &value, bool update = false) {
+	virtual property::status set(const std::string &key, const std::string &value, bool update = false) {
 		return set(key, static_cast<const void *>(&value), value_type::STRING, update);
 	}
 
-	virtual status set(const std::string &key, double value, bool update = false) {
+	virtual property::status set(const std::string &key, double value, bool update = false) {
 		return set(key, static_cast<const void *>(&value), value_type::DOUBLE, update);
 	}
 
-	virtual status set(const std::string &key, bool value, bool update = false) {
+	virtual property::status set(const std::string &key, bool value, bool update = false) {
 		return set(key, static_cast<const void *>(&value), value_type::BOOL, update);
 	}
 
-	virtual status set(const std::string &key, int32_t value, bool update = false) {
+	virtual property::status set(const std::string &key, int32_t value, bool update = false) {
 		return set(key, static_cast<const void *>(&value), value_type::INT, update);
 	}
 
-	virtual status set(const std::string &key, int64_t value, bool update = false) {
+	virtual property::status set(const std::string &key, int64_t value, bool update = false) {
 		return set(key, static_cast<const void *>(&value), value_type::INT64, update);
 	}
 
-	virtual status set(const std::string &key, const prop::blob_type &value, bool update = false) {
+	virtual property::status set(const std::string &key, const prop::blob_type &value, bool update = false) {
 		return set(key, static_cast<const void *>(&value), value_type::BLOB, update);
 	}
 
 public:
-	virtual status type(const std::string &key, value_type &type) const;
+	virtual property::status type(const std::string &key, value_type &type) const;
 
-	virtual status type(const std::string &key, value_type &type);
+	virtual property::status type(const std::string &key, value_type &type);
 
 public:
-	virtual status del(const std::string &key);
+	virtual property::status del(const std::string &key);
 
 private:
-	status get(const std::string &key, void *value, value_type type);
+	property::status get(const std::string &key, void *value, value_type type);
 
-	status set(const std::string &key, const void * const val, value_type type, bool update = false);
+	property::status set(const std::string &key, const void * const val, value_type type, bool update = false);
 
 private:
 	static int select_exec_cb(void *ptr, int argc, char **argv, char **names);

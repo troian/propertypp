@@ -4,7 +4,6 @@
 
 #include <cstdlib>
 #include <iostream>
-#include <exception>
 #include <stdexcept>
 
 #include <propertypp/sqlite.hpp>
@@ -80,7 +79,7 @@ sqlite::~sqlite()
 	sqlite3_close(db_);
 }
 
-status sqlite::get(const std::string &key, void *value, value_type type)
+property::status sqlite::get(const std::string &key, void *value, value_type type)
 {
 	std::string sql = "SELECT value, type FROM " + std::string(property_table_) + " WHERE key = \'" + key + "\'";
 	int ret;
@@ -107,7 +106,7 @@ status sqlite::get(const std::string &key, void *value, value_type type)
 				}
 				case value_type::INT64: {
 					int64_t *val = reinterpret_cast<int64_t *>(value);
-					*val = std::stoll(rsp.blob);
+					*val = std::stoull(rsp.blob);
 					break;
 				}
 				case value_type::DOUBLE: {
@@ -137,16 +136,16 @@ status sqlite::get(const std::string &key, void *value, value_type type)
 
 	} else {
 		sqlite3_free(errmsg);
-		std::cout << "Error: " << ret << std::endl;
+		std::cout << "Error: " << ret << "\n";
 		return status::UNKNOWN_ERROR;
 	}
 
 	return status::OK;
 }
 
-status sqlite::set(const std::string &key, const void * const val, value_type type, bool update)
+property::status sqlite::set(const std::string &key, const void * const val, value_type type, bool update)
 {
-	status ret = status::OK;
+	property::status ret = status::OK;
 
 	std::string sql = "INSERT INTO " + std::string(property_table_) + "(key, value, type) values (?,?,?)";
 	sqlite3_stmt *stmt;
@@ -220,17 +219,17 @@ status sqlite::set(const std::string &key, const void * const val, value_type ty
 
 								if (rc != SQLITE_OK) {
 									ret = status::UNKNOWN_ERROR;
-									std::cerr << "Error commiting: " << sqlite3_errmsg(db_) << std::endl;
+									std::cerr << "Error commiting: " << sqlite3_errmsg(db_) << "\n";
 								} else {
 									ret = status::OK;
 								}
 							} else {
-								std::cerr << "Error commiting: " << sqlite3_errmsg(db_) << std::endl;
+								std::cerr << "Error commiting: " << sqlite3_errmsg(db_) << "\n";
 								ret = status::UNKNOWN_ERROR;
 							}
 						}
 					} else {
-						std::cerr << "Error commiting: " << sqlite3_errmsg(db_) << std::endl;
+						std::cerr << "Error commiting: " << sqlite3_errmsg(db_) << "\n";
 					}
 				}
 			} else {
@@ -238,15 +237,15 @@ status sqlite::set(const std::string &key, const void * const val, value_type ty
 			}
 		}
 	} else {
-		std::cout << "Error commiting: " << sqlite3_errmsg(db_) << std::endl;
+		std::cout << "Error commiting: " << sqlite3_errmsg(db_) << "\n";
 	}
 
 	return ret;
 }
 
-status sqlite::del(const std::string &key)
+property::status sqlite::del(const std::string &key)
 {
-	status ret = status::OK;
+	property::status ret;
 
 	std::string sql = "DELETE FROM " + std::string(property_table_) + " WHERE key = \'" + key + "\'";
 
@@ -264,9 +263,9 @@ status sqlite::del(const std::string &key)
 	return ret;
 }
 
-status sqlite::type(const std::string &key, value_type &type) const
+property::status sqlite::type(const std::string &key, value_type &type) const
 {
-	status retval = status::OK;
+	property::status retval = status::OK;
 
 	std::string sql = "SELECT type FROM " + std::string(property_table_) + " WHERE key = \'" + key + "\'";
 
@@ -290,9 +289,9 @@ status sqlite::type(const std::string &key, value_type &type) const
 	return retval;
 }
 
-status sqlite::type(const std::string &key, value_type &type)
+property::status sqlite::type(const std::string &key, value_type &type)
 {
-	status retval = status::OK;
+	property::status retval = status::OK;
 
 	std::string sql = "SELECT type FROM " + std::string(property_table_) + " WHERE key = \'" + key + "\'";
 

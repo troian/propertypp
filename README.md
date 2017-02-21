@@ -30,7 +30,7 @@ int main()
 	try {
 		prop = std::make_shared<sqlite>(property_file);
 	} catch (const std::exception &e) {
-		std::cerr << e.what() << std::endl;
+		std::cerr << e.what() << "\n";
 		return 1;
 	}
 
