@@ -6,17 +6,16 @@
 #include <iostream>
 #include <stdexcept>
 
-#include <propertypp/sqlite.hpp>
+#include <propertypp/sqlite.hh>
 #include <tools/base64.hpp>
 
 namespace property {
 
-int sqlite::select_exec_cb(void *ptr, int argc, char **argv, char **names)
-{
+int sqlite::select_exec_cb(void *ptr, int argc, char **argv, char **names) {
 	// suppress: warning: unused parameter 'names' [-Wunused-parameter]
 	(void)names;
 
-	req_value *value = reinterpret_cast<req_value *>(ptr);
+	auto value = reinterpret_cast<req_value *>(ptr);
 
 	value->found = true;
 
@@ -31,12 +30,11 @@ int sqlite::select_exec_cb(void *ptr, int argc, char **argv, char **names)
 	return 0;
 }
 
-int sqlite::type_exec_cb(void *ptr, int argc, char **argv, char **names)
-{
+int sqlite::type_exec_cb(void *ptr, int argc, char **argv, char **names) {
 	// suppress: warning: unused parameter 'names' [-Wunused-parameter]
 	(void)names;
 
-	req_value *value = reinterpret_cast<req_value *>(ptr);
+	auto value = reinterpret_cast<req_value *>(ptr);
 
 	value->found = true;
 
@@ -52,267 +50,263 @@ int sqlite::type_exec_cb(void *ptr, int argc, char **argv, char **names)
 
 const char sqlite::property_table_[] = "property_table";
 
-sqlite::sqlite(const std::string &db) :
+sqlite::sqlite(sqlite_wrap::sp s) :
 	  prop()
-	, db_(NULL)
+	, _sqlite(s)
 {
-	if (sqlite3_open(db.c_str(), &db_) != SQLITE_OK) {
-		std::string error ("Couldn't open database file");
-		error += sqlite3_errmsg(db_);
-		sqlite3_close(db_);
-		throw std::runtime_error(error);
-	}
+	s->perform<ssize_t>([](sqlite3 *inst) -> ssize_t {
+		const char *sql = "CREATE TABLE IF NOT EXISTS property_table(key STRING PRIMARY KEY, value BLOB, type INTEGER);";
 
-//	sqlite3_extended_result_codes(db_, true);
-	const char *sql = "CREATE TABLE IF NOT EXISTS property_table(key STRING PRIMARY KEY, value BLOB, type INTEGER);";
-
-	if (sqlite3_exec(db_, sql, 0, 0, 0) != SQLITE_OK) {
-		std::string error ("Couldn't create table");
-		error += sqlite3_errmsg(db_);
-		sqlite3_close(db_);
-		throw std::runtime_error(error);
-	}
-}
-
-sqlite::~sqlite()
-{
-	sqlite3_close(db_);
-}
-
-property::status sqlite::get(const std::string &key, void *value, value_type type)
-{
-	std::string sql = "SELECT value, type FROM " + std::string(property_table_) + " WHERE key = \'" + key + "\'";
-	int ret;
-	char *errmsg = NULL;
-	req_value rsp;
-
-	ret = sqlite3_exec(db_, sql.c_str(), select_exec_cb, &rsp, &errmsg);
-
-	if (ret == SQLITE_OK) {
-		if (rsp.found) {
-			if (type != rsp.type) {
-				return status::INVALID_TYPE;
-			} else {
-				switch (type) {
-				case value_type::STRING: {
-					std::string *val = reinterpret_cast<std::string *>(value);
-					*val = rsp.blob;
-					break;
-				}
-				case value_type::INT: {
-					int32_t *val = reinterpret_cast<int32_t *>(value);
-					*val = std::stoi(rsp.blob);
-					break;
-				}
-				case value_type::INT64: {
-					int64_t *val = reinterpret_cast<int64_t *>(value);
-					*val = std::stoull(rsp.blob);
-					break;
-				}
-				case value_type::DOUBLE: {
-					double *val = reinterpret_cast<double *>(value);
-					*val = std::stod(rsp.blob);
-					break;
-				}
-				case value_type::BOOL: {
-					bool *val = reinterpret_cast<bool *>(value);
-
-					*val = rsp.blob.compare("false") != 0;
-
-					break;
-				}
-				case value_type::BLOB: {
-					prop::blob_type *val = reinterpret_cast<prop::blob_type *>(value);
-
-					prop::blob_type tmp = tools::base64::decode<prop::blob_type>(rsp.blob);
-					*val = std::move(tmp);
-					break;
-				}
-				}
-			}
-		} else {
-			return status::NOT_FOUND;
+		if (sqlite3_exec(inst, sql, nullptr, nullptr, nullptr) != SQLITE_OK) {
+			std::string error ("create \"property_table\" table: ");
+			error += sqlite3_errmsg(inst);
+			sqlite3_close(inst);
+			throw std::runtime_error(error);
 		}
 
-	} else {
-		sqlite3_free(errmsg);
-		std::cout << "Error: " << ret << "\n";
-		return status::UNKNOWN_ERROR;
-	}
-
-	return status::OK;
+		return 0;
+	});
 }
 
-property::status sqlite::set(const std::string &key, const void * const val, value_type type, bool update)
-{
-	property::status ret = status::OK;
+property::status sqlite::get(const std::string &key, void *value, value_type type) {
+	return _sqlite->perform<property::status>([&key, &value, type](sqlite3 *inst) -> property::status {
+		std::string sql = "SELECT value, type FROM " + std::string(property_table_) + " WHERE key = \'" + key + "\'";
+		int ret;
+		char *errmsg = nullptr;
+		req_value rsp;
 
-	std::string sql = "INSERT INTO " + std::string(property_table_) + "(key, value, type) values (?,?,?)";
-	sqlite3_stmt *stmt;
+		ret = sqlite3_exec(inst, sql.c_str(), select_exec_cb, &rsp, &errmsg);
 
-	std::string value;
-
-	switch (type) {
-	case value_type::STRING: {
-		value = *(reinterpret_cast<const std::string * const>(val));
-		break;
-	}
-	case value_type::INT: {
-		const int32_t * const v = reinterpret_cast<const int32_t * const>(val);
-		value = std::to_string(*v);
-		break;
-	}
-	case value_type::INT64: {
-		const int64_t * const v = reinterpret_cast<const int64_t * const>(val);
-		value = std::to_string(*v);
-		break;
-	}
-	case value_type::DOUBLE: {
-		const double * const v = reinterpret_cast<const double * const>(val);
-		value = std::to_string(*v);
-		break;
-	}
-	case value_type::BOOL: {
-		const bool * const v = reinterpret_cast<const bool * const>(val);
-		value = *v ? "true" : "false";
-		break;
-	}
-	case value_type::BLOB: {
-		const prop::blob_type * const v = reinterpret_cast<const prop::blob_type * const>(val);
-		tools::base64::encode(value, v);
-		break;
-	}
-	}
-
-	int rc = sqlite3_prepare_v2(db_, sql.c_str(), sql.size(), &stmt, NULL);
-
-	if (rc == SQLITE_OK) {
-		// bind values
-
-		sqlite3_bind_text(stmt, 1, key.c_str(), key.size(), 0);
-		sqlite3_bind_blob(stmt, 2, value.c_str(), value.size(), NULL);
-		sqlite3_bind_int(stmt, 3, static_cast<int>(type));
-
-		// commit
-		sqlite3_step(stmt);
-		rc = sqlite3_finalize(stmt);
-
-		if (rc != SQLITE_OK) {
-			if (rc == SQLITE_CONSTRAINT) {
-				if (!update) {
-					ret = status::ALREADY_EXISTS;
+		if (ret == SQLITE_OK) {
+			if (rsp.found) {
+				if (type != rsp.type) {
+					return status::INVALID_TYPE;
 				} else {
-					value_type prop_type;
+					switch (type) {
+					case value_type::STRING: {
+						auto val = reinterpret_cast<std::string *>(value);
+						*val = rsp.blob;
+						break;
+					}
+					case value_type::INT: {
+						auto val = reinterpret_cast<int32_t *>(value);
+						*val = std::stoi(rsp.blob);
+						break;
+					}
+					case value_type::INT64: {
+						auto val = reinterpret_cast<int64_t *>(value);
+						*val = std::stoull(rsp.blob);
+						break;
+					}
+					case value_type::DOUBLE: {
+						auto val = reinterpret_cast<double *>(value);
+						*val = std::stod(rsp.blob);
+						break;
+					}
+					case value_type::BOOL: {
+						auto val = reinterpret_cast<bool *>(value);
 
-					ret = sqlite::type(key, prop_type);
-					if (ret == status::OK) {
-						if (prop_type != type) {
-							ret = status::INVALID_TYPE;
-						} else {
-							sql = "UPDATE " + std::string(property_table_) + " SET value = ? WHERE key = \'" + key + "\'";
-							rc = sqlite3_prepare_v2(db_, sql.c_str(), sql.size(), &stmt, NULL);
-							if (rc == SQLITE_OK) {
-								sqlite3_bind_blob(stmt, 1, value.c_str(), value.size(), NULL);
+						*val = rsp.blob.compare("false") != 0;
 
-								sqlite3_step(stmt);
-								rc = sqlite3_finalize(stmt);
+						break;
+					}
+					case value_type::BLOB: {
+						auto val = reinterpret_cast<prop::blob_type *>(value);
 
-								if (rc != SQLITE_OK) {
-									ret = status::UNKNOWN_ERROR;
-									std::cerr << "Error commiting: " << sqlite3_errmsg(db_) << "\n";
-								} else {
-									ret = status::OK;
-								}
-							} else {
-								std::cerr << "Error commiting: " << sqlite3_errmsg(db_) << "\n";
-								ret = status::UNKNOWN_ERROR;
-							}
-						}
-					} else {
-						std::cerr << "Error commiting: " << sqlite3_errmsg(db_) << "\n";
+						prop::blob_type tmp = tools::base64::decode<prop::blob_type>(rsp.blob);
+						*val = std::move(tmp);
+						break;
+					}
 					}
 				}
 			} else {
-				ret = status::UNKNOWN_ERROR;
+				return status::NOT_FOUND;
 			}
-		}
-	} else {
-		std::cout << "Error commiting: " << sqlite3_errmsg(db_) << "\n";
-	}
-
-	return ret;
-}
-
-property::status sqlite::del(const std::string &key)
-{
-	property::status ret;
-
-	std::string sql = "DELETE FROM " + std::string(property_table_) + " WHERE key = \'" + key + "\'";
-
-	sqlite3_stmt *stmt;
-
-	if (sqlite3_prepare_v2(db_, sql.c_str(), sql.size(), &stmt, NULL) == SQLITE_OK) {
-		while (sqlite3_step(stmt) == SQLITE_DONE) {}
-		ret = status::OK;
-	} else {
-		ret = status::UNKNOWN_ERROR;
-	}
-
-	sqlite3_finalize(stmt);
-
-	return ret;
-}
-
-property::status sqlite::type(const std::string &key, value_type &type) const
-{
-	property::status retval = status::OK;
-
-	std::string sql = "SELECT type FROM " + std::string(property_table_) + " WHERE key = \'" + key + "\'";
-
-	int ret;
-	char *errmsg = NULL;
-	req_value rsp;
-
-	ret = sqlite3_exec(db_, sql.c_str(), type_exec_cb, &rsp, &errmsg);
-
-	if (ret == SQLITE_OK) {
-		if (rsp.found) {
-	   	    type = rsp.type;
 		} else {
-			retval = status::NOT_FOUND;
+			sqlite3_free(errmsg);
+			std::cout << "Error: " << ret << "\n";
+			return status::UNKNOWN_ERROR;
 		}
-	} else {
-		sqlite3_free(errmsg);
-		retval = status::UNKNOWN_ERROR;
-	}
 
-	return retval;
+		return status::OK;
+	});
 }
 
-property::status sqlite::type(const std::string &key, value_type &type)
-{
-	property::status retval = status::OK;
+property::status sqlite::set(const std::string &key, const void *val, value_type type, bool update) {
+	return _sqlite->perform<property::status>([this, &key, &val, type, update](sqlite3 *inst) -> property::status {
+		property::status ret = status::OK;
 
-	std::string sql = "SELECT type FROM " + std::string(property_table_) + " WHERE key = \'" + key + "\'";
+		std::string sql = "INSERT INTO " + std::string(property_table_) + "(key, value, type) values (?,?,?)";
+		sqlite3_stmt *stmt;
 
-	int ret;
-	char *errmsg = NULL;
-	req_value rsp;
+		std::string value;
 
-	ret = sqlite3_exec(db_, sql.c_str(), type_exec_cb, &rsp, &errmsg);
-
-	if (ret == SQLITE_OK) {
-		if (rsp.found) {
-			type = rsp.type;
-		} else {
-			retval = status::NOT_FOUND;
+		switch (type) {
+		case value_type::STRING: {
+			value = *(reinterpret_cast<const std::string *const>(val));
+			break;
 		}
-	} else {
-		sqlite3_free(errmsg);
-		retval = status::UNKNOWN_ERROR;
-	}
+		case value_type::INT: {
+			auto v = reinterpret_cast<const int32_t *const>(val);
+			value = std::to_string(*v);
+			break;
+		}
+		case value_type::INT64: {
+			auto v = reinterpret_cast<const int64_t *const>(val);
+			value = std::to_string(*v);
+			break;
+		}
+		case value_type::DOUBLE: {
+			auto v = reinterpret_cast<const double *const>(val);
+			value = std::to_string(*v);
+			break;
+		}
+		case value_type::BOOL: {
+			auto v = reinterpret_cast<const bool *const>(val);
+			value = *v ? "true" : "false";
+			break;
+		}
+		case value_type::BLOB: {
+			auto v = reinterpret_cast<const prop::blob_type *const>(val);
+			tools::base64::encode(value, v);
+			break;
+		}
+		}
 
-	return retval;
+		int rc = sqlite3_prepare_v2(inst, sql.c_str(), sql.size(), &stmt, NULL);
+
+		if (rc == SQLITE_OK) {
+			// bind values
+
+			sqlite3_bind_text(stmt, 1, key.c_str(), key.size(), 0);
+			sqlite3_bind_blob(stmt, 2, value.c_str(), value.size(), NULL);
+			sqlite3_bind_int(stmt, 3, static_cast<int>(type));
+
+			// commit
+			sqlite3_step(stmt);
+			rc = sqlite3_finalize(stmt);
+
+			if (rc != SQLITE_OK) {
+				if (rc == SQLITE_CONSTRAINT) {
+					if (!update) {
+						ret = status::ALREADY_EXISTS;
+					} else {
+						value_type prop_type;
+
+						ret = sqlite::type(key, prop_type);
+						if (ret == status::OK) {
+							if (prop_type != type) {
+								ret = status::INVALID_TYPE;
+							} else {
+								sql = "UPDATE " + std::string(property_table_) + " SET value = ? WHERE key = \'" + key
+								      + "\'";
+								rc = sqlite3_prepare_v2(inst, sql.c_str(), sql.size(), &stmt, NULL);
+								if (rc == SQLITE_OK) {
+									sqlite3_bind_blob(stmt, 1, value.c_str(), value.size(), NULL);
+
+									sqlite3_step(stmt);
+									rc = sqlite3_finalize(stmt);
+
+									if (rc != SQLITE_OK) {
+										ret = status::UNKNOWN_ERROR;
+										std::cerr << "Error committing: " << sqlite3_errmsg(inst) << "\n";
+									} else {
+										ret = status::OK;
+									}
+								} else {
+									std::cerr << "Error committing: " << sqlite3_errmsg(inst) << "\n";
+									ret = status::UNKNOWN_ERROR;
+								}
+							}
+						} else {
+							std::cerr << "Error committing: " << sqlite3_errmsg(inst) << "\n";
+						}
+					}
+				} else {
+					ret = status::UNKNOWN_ERROR;
+				}
+			}
+		} else {
+			std::cout << "error committing: " << sqlite3_errmsg(inst) << "\n";
+		}
+
+		return ret;
+	});
+}
+
+property::status sqlite::del(const std::string &key) {
+	return _sqlite->perform<property::status>([&key](sqlite3 *inst) -> property::status {
+		property::status ret;
+
+		std::string sql = "DELETE FROM " + std::string(property_table_) + " WHERE key = \'" + key + "\'";
+
+		sqlite3_stmt *stmt;
+
+		if (sqlite3_prepare_v2(inst, sql.c_str(), sql.size(), &stmt, nullptr) == SQLITE_OK) {
+			while (sqlite3_step(stmt) == SQLITE_DONE) {}
+			ret = status::OK;
+		} else {
+			ret = status::UNKNOWN_ERROR;
+		}
+
+		sqlite3_finalize(stmt);
+
+		return ret;
+	});
+}
+
+property::status sqlite::type(const std::string &key, value_type &type) const {
+	return _sqlite->perform<property::status>([&key, &type](sqlite3 *inst) -> property::status {
+		property::status retval = status::OK;
+
+		std::string sql = "SELECT type FROM " + std::string(property_table_) + " WHERE key = \'" + key + "\'";
+
+		int ret;
+		char *errmsg = nullptr;
+		req_value rsp;
+
+		ret = sqlite3_exec(inst, sql.c_str(), type_exec_cb, &rsp, &errmsg);
+
+		if (ret == SQLITE_OK) {
+			if (rsp.found) {
+				type = rsp.type;
+			} else {
+				retval = status::NOT_FOUND;
+			}
+		} else {
+			sqlite3_free(errmsg);
+			retval = status::UNKNOWN_ERROR;
+		}
+
+		return retval;
+	});
+}
+
+property::status sqlite::type(const std::string &key, value_type &type) {
+	return _sqlite->perform<property::status>([&key, &type](sqlite3 *inst) -> property::status {
+		property::status retval = status::OK;
+
+		std::string sql = "SELECT type FROM " + std::string(property_table_) + " WHERE key = \'" + key + "\'";
+
+		int ret;
+		char *errmsg = nullptr;
+		req_value rsp;
+
+		ret = sqlite3_exec(inst, sql.c_str(), type_exec_cb, &rsp, &errmsg);
+
+		if (ret == SQLITE_OK) {
+			if (rsp.found) {
+				type = rsp.type;
+			} else {
+				retval = status::NOT_FOUND;
+			}
+		} else {
+			sqlite3_free(errmsg);
+			retval = status::UNKNOWN_ERROR;
+		}
+
+		return retval;
+	});
 }
 
 } // namespace property

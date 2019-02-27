@@ -29,8 +29,8 @@ set(EXPORT_INCLUDES
 )
 
 set(LIB_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/property.cpp
-    ${EXPORT_INCLUDES}/base/propertypp/property.hpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/property.cpp
+	${EXPORT_INCLUDES}/base/propertypp/property.hh
 )
 
 #if (NOT PROPERTY_SQLITE)
@@ -43,8 +43,8 @@ if (PROPERTY_SQLITE)
 	check_include_file(sqlite3.h HAVE_MEMORY)
 
 	set(LIB_SOURCES ${LIB_SOURCES}
-	    ${CMAKE_CURRENT_SOURCE_DIR}/src/sqlite.cpp
-	    ${EXPORT_INCLUDES}/sqlite/propertypp/sqlite.hpp
+		${CMAKE_CURRENT_SOURCE_DIR}/src/sqlite.cpp
+		${EXPORT_INCLUDES}/sqlite/propertypp/sqlite.hh
 	)
 endif()
 
@@ -61,6 +61,7 @@ target_include_directories(
 target_link_libraries(
 	${PROJECT_NAME}
 	base64
+	typespp
 )
 
 if (PROPERTY_SQLITE)

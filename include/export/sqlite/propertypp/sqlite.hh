@@ -8,7 +8,9 @@
 #include <vector>
 #include <string>
 
-#include <propertypp/property.hpp>
+#include <propertypp/property.hh>
+
+#include <util/types.hh>
 
 namespace property {
 
@@ -41,77 +43,81 @@ public:
 	 *
 	 * \param[in]  db
 	 */
-	explicit sqlite(const std::string &db);
+	explicit sqlite(sqlite_wrap::sp s);
 
-	virtual ~sqlite();
+	~sqlite() override = default;
 
-private:
-private: // Forbid copy
+public: // Forbid copy
 	sqlite(sqlite const &) = delete;
 	sqlite &operator = (sqlite const &) = delete;
 
 public: // getters
-	virtual property::status get(const std::string &key, std::string &value) {
+	property::status get(const std::string &key, std::string &value) override {
 		return get(key, static_cast<void *>(&value), value_type::STRING);
 	}
 
-	virtual property::status get(const std::string &key, int32_t &value) {
+	property::status get(const std::string &key, int32_t &value) override {
 		return get(key, static_cast<void *>(&value), value_type::INT);
 	}
 
-	virtual property::status get(const std::string &key, int64_t &value) {
+	property::status get(const std::string &key, int64_t &value) override {
 		return get(key, static_cast<void *>(&value), value_type::INT64);
 	}
 
-	virtual property::status get(const std::string &key, double &value) {
+	property::status get(const std::string &key, double &value) override {
 		return get(key, static_cast<void *>(&value), value_type::DOUBLE);
 	}
 
-	virtual property::status get(const std::string &key, bool &value) {
+	property::status get(const std::string &key, bool &value) override {
 		return get(key, static_cast<void *>(&value), value_type::BOOL);
 	}
 
-	virtual property::status get(const std::string &key, prop::blob_type &value) {
+	property::status get(const std::string &key, prop::blob_type &value) override {
 		return get(key, static_cast<void *>(&value), value_type::BLOB);
 	}
 
 public: // setters
-	virtual property::status set(const std::string &key, const std::string &value, bool update = false) {
+	property::status set(const std::string &key, const std::string &value, bool update = false) override {
 		return set(key, static_cast<const void *>(&value), value_type::STRING, update);
 	}
 
-	virtual property::status set(const std::string &key, double value, bool update = false) {
+	property::status set(const std::string &key, double value, bool update = false) override {
 		return set(key, static_cast<const void *>(&value), value_type::DOUBLE, update);
 	}
 
-	virtual property::status set(const std::string &key, bool value, bool update = false) {
+	property::status set(const std::string &key, bool value, bool update = false) override {
 		return set(key, static_cast<const void *>(&value), value_type::BOOL, update);
 	}
 
-	virtual property::status set(const std::string &key, int32_t value, bool update = false) {
+	property::status set(const std::string &key, int32_t value, bool update = false) override {
 		return set(key, static_cast<const void *>(&value), value_type::INT, update);
 	}
 
-	virtual property::status set(const std::string &key, int64_t value, bool update = false) {
+	property::status set(const std::string &key, int64_t value, bool update = false) {
 		return set(key, static_cast<const void *>(&value), value_type::INT64, update);
 	}
 
-	virtual property::status set(const std::string &key, const prop::blob_type &value, bool update = false) {
+	property::status set(const std::string &key, const prop::blob_type &value, bool update = false) override {
 		return set(key, static_cast<const void *>(&value), value_type::BLOB, update);
 	}
 
 public:
-	virtual property::status type(const std::string &key, value_type &type) const;
+	property::status type(const std::string &key, value_type &type) const override;
 
-	virtual property::status type(const std::string &key, value_type &type);
+	property::status type(const std::string &key, value_type &type) override;
 
 public:
-	virtual property::status del(const std::string &key);
+	property::status del(const std::string &key) override;
+
+public:
+	auto shared_from_this() {
+		return shared_from(this);
+	}
 
 private:
 	property::status get(const std::string &key, void *value, value_type type);
 
-	property::status set(const std::string &key, const void * const val, value_type type, bool update = false);
+	property::status set(const std::string &key, const void *val, value_type type, bool update = false);
 
 private:
 	static int select_exec_cb(void *ptr, int argc, char **argv, char **names);
@@ -119,7 +125,7 @@ private:
 	static int type_exec_cb(void *ptr, int argc, char **argv, char **names);
 
 private:
-	sqlite3    *db_;
+	sqlite_wrap::sp _sqlite;
 
 private:
 	static const char property_table_[];

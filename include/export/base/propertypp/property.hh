@@ -28,7 +28,7 @@ using up_property = typename std::unique_ptr<class prop>;
 /**
  * \brief
  */
-class prop {
+class prop : public std::enable_shared_from_this<prop> {
 public:
 	typedef std::vector<uint8_t> blob_type;
 
@@ -48,11 +48,11 @@ public:
 	/**
 	 * \brief
 	 */
-	prop() {}
+	prop() = default;
 
 	virtual ~prop() = 0;
 
-private: // Forbid copy
+public: // Forbid copy
 	prop(prop const &) = delete;
 	prop &operator = (prop const &) = delete;
 
