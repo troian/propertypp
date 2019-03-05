@@ -143,31 +143,31 @@ property::status sqlite::set(const std::string &key, const void *val, value_type
 
 		switch (type) {
 		case value_type::STRING: {
-			value = *(reinterpret_cast<const std::string *const>(val));
+			value = *(reinterpret_cast<const std::string *>(val));
 			break;
 		}
 		case value_type::INT: {
-			auto v = reinterpret_cast<const int32_t *const>(val);
+			auto v = reinterpret_cast<const int32_t *>(val);
 			value = std::to_string(*v);
 			break;
 		}
 		case value_type::INT64: {
-			auto v = reinterpret_cast<const int64_t *const>(val);
+			auto v = reinterpret_cast<const int64_t *>(val);
 			value = std::to_string(*v);
 			break;
 		}
 		case value_type::DOUBLE: {
-			auto v = reinterpret_cast<const double *const>(val);
+			auto v = reinterpret_cast<const double *>(val);
 			value = std::to_string(*v);
 			break;
 		}
 		case value_type::BOOL: {
-			auto v = reinterpret_cast<const bool *const>(val);
+			auto v = reinterpret_cast<const bool *>(val);
 			value = *v ? "true" : "false";
 			break;
 		}
 		case value_type::BLOB: {
-			auto v = reinterpret_cast<const prop::blob_type *const>(val);
+			auto v = reinterpret_cast<const prop::blob_type *>(val);
 			tools::base64::encode(value, v);
 			break;
 		}
