@@ -66,7 +66,7 @@ public: // getters
 	 * \retval \ref PROP_STATUS_OK - val contains property value
 	 * \retval \ref PROP_STATUS_INVALID_TYPE - property exists but with different type of it's value
 	 * \retval \ref PROP_STATUS_NOT_FOUND - property does not exists
-	 * \retval \ret PROP_STATUS_UNKNOWN_ERROR - some unexpected shit happend
+	 * \retval \ret PROP_STATUS_UNKNOWN_ERROR - some unexpected shit happened
 	 */
 	virtual property::status get(const std::string &key, std::string &val) = 0;
 	virtual property::status get(const std::string &key, int32_t &value) = 0;

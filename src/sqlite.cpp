@@ -243,7 +243,7 @@ property::status sqlite::del(const std::string &key) {
 		sqlite3_stmt *stmt;
 
 		if (sqlite3_prepare_v2(inst, sql.c_str(), sql.size(), &stmt, nullptr) == SQLITE_OK) {
-			while (sqlite3_step(stmt) == SQLITE_DONE) {}
+			sqlite3_step(stmt);
 			ret = status::OK;
 		} else {
 			ret = status::UNKNOWN_ERROR;
