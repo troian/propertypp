@@ -18,11 +18,11 @@ option(PROPERTY_SQLITE "Build SQLite storage implementation" ON)
 option(PROPERTY_BUILD_SHARED_LIB "Build the shared library" OFF)
 option(PROPERTY_TESTS "Build tests" OFF)
 
-check_include_file_cxx(iostream HAVE_IOSTREAM)
-check_include_file_cxx(string HAVE_STRING)
+check_include_file_cxx(iostream  HAVE_IOSTREAM)
+check_include_file_cxx(string    HAVE_STRING)
 check_include_file_cxx(exception HAVE_EXCEPTION)
 check_include_file_cxx(stdexcept HAVE_STDEXCEPT)
-check_include_file_cxx(memory HAVE_MEMORY)
+check_include_file_cxx(memory    HAVE_MEMORY)
 
 set(EXPORT_INCLUDES
 	${CMAKE_CURRENT_SOURCE_DIR}/include/export
