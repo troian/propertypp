@@ -24,8 +24,8 @@ private:
 	 */
 	class req_value {
 	public:
-		req_value() :
-			  found(false)
+		req_value()
+			: found(false)
 			, valid(false)
 			, blob()
 			, type(value_type::STRING)

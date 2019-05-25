@@ -50,8 +50,8 @@ int sqlite::type_exec_cb(void *ptr, int argc, char **argv, char **names) {
 
 const char sqlite::property_table_[] = "property_table";
 
-sqlite::sqlite(sqlite_wrap::sp s) :
-	  prop()
+sqlite::sqlite(sqlite_wrap::sp s)
+	: prop()
 	, _sqlite(s)
 {
 	s->perform<ssize_t>([](sqlite3 *inst) -> ssize_t {
