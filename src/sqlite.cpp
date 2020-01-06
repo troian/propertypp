@@ -50,22 +50,24 @@ int sqlite::type_exec_cb(void *ptr, int argc, char **argv, char **names) {
 
 const char sqlite::property_table_[] = "property_table";
 
-sqlite::sqlite(sqlite_wrap::sp s)
+sqlite::sqlite(sqlite_wrap::sp s, bool create)
 	: prop()
 	, _sqlite(s)
 {
-	s->perform<ssize_t>([](sqlite3 *inst) -> ssize_t {
-		const char *sql = "CREATE TABLE IF NOT EXISTS property_table(key STRING PRIMARY KEY, value BLOB, type INTEGER);";
+	if (create) {
+		s->perform<ssize_t>([](sqlite3 *inst) -> ssize_t {
+			const char *sql = "CREATE TABLE IF NOT EXISTS property_table(key STRING PRIMARY KEY, value BLOB, type INTEGER);";
 
-		if (sqlite3_exec(inst, sql, nullptr, nullptr, nullptr) != SQLITE_OK) {
-			std::string error ("create \"property_table\" table: ");
-			error += sqlite3_errmsg(inst);
-			sqlite3_close(inst);
-			throw std::runtime_error(error);
-		}
+			if (sqlite3_exec(inst, sql, nullptr, nullptr, nullptr) != SQLITE_OK) {
+				std::string error("create \"property_table\" table: ");
+				error += sqlite3_errmsg(inst);
+				sqlite3_close(inst);
+				throw std::runtime_error(error);
+			}
 
-		return 0;
-	});
+			return 0;
+		});
+	}
 }
 
 property::status sqlite::get(const std::string &key, void *value, value_type type) {
@@ -133,7 +135,7 @@ property::status sqlite::get(const std::string &key, void *value, value_type typ
 }
 
 property::status sqlite::set(const std::string &key, const void *val, value_type type, bool update) {
-	return _sqlite->perform<property::status>([this, &key, &val, type, update](sqlite3 *inst) -> property::status {
+	return _sqlite->perform<property::status>([&key, &val, type, update](sqlite3 *inst) -> property::status {
 		property::status ret = status::OK;
 
 		std::string sql = "INSERT INTO " + std::string(property_table_) + "(key, value, type) values (?,?,?)";
@@ -193,7 +195,7 @@ property::status sqlite::set(const std::string &key, const void *val, value_type
 					} else {
 						value_type prop_type;
 
-						ret = sqlite::type(key, prop_type);
+						ret = sqlite::ptype(inst, key, prop_type);
 						if (ret == status::OK) {
 							if (prop_type != type) {
 								ret = status::INVALID_TYPE;
@@ -257,56 +259,39 @@ property::status sqlite::del(const std::string &key) {
 
 property::status sqlite::type(const std::string &key, value_type &type) const {
 	return _sqlite->perform<property::status>([&key, &type](sqlite3 *inst) -> property::status {
-		property::status retval = status::OK;
-
-		std::string sql = "SELECT type FROM " + std::string(property_table_) + " WHERE key = \'" + key + "\'";
-
-		int ret;
-		char *errmsg = nullptr;
-		req_value rsp;
-
-		ret = sqlite3_exec(inst, sql.c_str(), type_exec_cb, &rsp, &errmsg);
-
-		if (ret == SQLITE_OK) {
-			if (rsp.found) {
-				type = rsp.type;
-			} else {
-				retval = status::NOT_FOUND;
-			}
-		} else {
-			sqlite3_free(errmsg);
-			retval = status::UNKNOWN_ERROR;
-		}
-
-		return retval;
+		return ptype(inst, key, type);
 	});
 }
 
 property::status sqlite::type(const std::string &key, value_type &type) {
 	return _sqlite->perform<property::status>([&key, &type](sqlite3 *inst) -> property::status {
-		property::status retval = status::OK;
-
-		std::string sql = "SELECT type FROM " + std::string(property_table_) + " WHERE key = \'" + key + "\'";
-
-		int ret;
-		char *errmsg = nullptr;
-		req_value rsp;
-
-		ret = sqlite3_exec(inst, sql.c_str(), type_exec_cb, &rsp, &errmsg);
-
-		if (ret == SQLITE_OK) {
-			if (rsp.found) {
-				type = rsp.type;
-			} else {
-				retval = status::NOT_FOUND;
-			}
-		} else {
-			sqlite3_free(errmsg);
-			retval = status::UNKNOWN_ERROR;
-		}
-
-		return retval;
+		return ptype(inst, key, type);
 	});
+}
+
+property::status sqlite::ptype(sqlite3 *inst, const std::string &key, value_type &type) {
+	property::status retval = status::OK;
+
+	std::string sql = "SELECT type FROM " + std::string(property_table_) + " WHERE key = \'" + key + "\'";
+
+	int ret;
+	char *errmsg = nullptr;
+	req_value rsp;
+
+	ret = sqlite3_exec(inst, sql.c_str(), type_exec_cb, &rsp, &errmsg);
+
+	if (ret == SQLITE_OK) {
+		if (rsp.found) {
+			type = rsp.type;
+		} else {
+			retval = status::NOT_FOUND;
+		}
+	} else {
+		sqlite3_free(errmsg);
+		retval = status::UNKNOWN_ERROR;
+	}
+
+	return retval;
 }
 
 } // namespace property

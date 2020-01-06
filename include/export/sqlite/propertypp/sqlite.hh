@@ -43,7 +43,7 @@ public:
 	 *
 	 * \param[in]  db
 	 */
-	explicit sqlite(sqlite_wrap::sp s);
+	explicit sqlite(sqlite_wrap::sp s, bool create = false);
 
 	~sqlite() override = default;
 
@@ -93,7 +93,7 @@ public: // setters
 		return set(key, static_cast<const void *>(&value), value_type::INT, update);
 	}
 
-	property::status set(const std::string &key, int64_t value, bool update = false) {
+	property::status set(const std::string &key, int64_t value, bool update = false) override {
 		return set(key, static_cast<const void *>(&value), value_type::INT64, update);
 	}
 
@@ -118,6 +118,8 @@ private:
 	property::status get(const std::string &key, void *value, value_type type);
 
 	property::status set(const std::string &key, const void *val, value_type type, bool update = false);
+
+	static property::status ptype(sqlite3 *inst, const std::string &key, value_type &type);
 
 private:
 	static int select_exec_cb(void *ptr, int argc, char **argv, char **names);
